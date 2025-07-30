@@ -1,0 +1,7 @@
+{
+  "name": "travestingmoneyadmin",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}
