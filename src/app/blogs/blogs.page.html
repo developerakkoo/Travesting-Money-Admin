@@ -1,0 +1,40 @@
+<ion-header [translucent]="true" class="ion-no-border">
+  <ion-toolbar>
+    <ion-title>Blogs</ion-title>
+    <ion-button slot="end" (click)="createNewBlog()" expand="block">
+      Create new blog
+    </ion-button>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+
+  <ion-text color="medium" *ngIf="blogs.length == 0">
+ <p>No Blogs Added!</p>
+  </ion-text>
+  <ion-list *ngIf="blogs.length > 0">
+    <ion-list-header>
+      <ion-label>All Published Blogs</ion-label>
+    </ion-list-header>
+    <ion-searchbar placeholder="Search Blogs" inputmode="decimal" type="decimal" (ionChange)="onSearchChange($event)" [debounce]="250" showCancelButton="always"></ion-searchbar>
+    
+
+  <ion-item *ngFor="let item of blogs">
+    <ion-label>  <h2>{{ item.fields['title'].stringValue }}</h2>
+    <p *ngIf="item.fields['createdAt']"> Created At:- {{ item.fields['createdAt'].timestampValue | date: 'medium' }}</p>
+    <p *ngIf="item.fields['updatedAt']">Updated At:- {{ item.fields['updatedAt'].timestampValue | date: 'medium' }}</p>
+    </ion-label>
+    <ion-buttons slot="end">
+      <ion-button (click)="update(item)">
+        <ion-icon slot="start" name="create"></ion-icon>
+        
+      </ion-button>
+       <ion-button (click)="delete(item)">
+        <ion-icon color="danger" slot="start" name="trash"></ion-icon>
+        
+      </ion-button>
+    </ion-buttons>
+  </ion-item>
+  </ion-list>
+  
+</ion-content>

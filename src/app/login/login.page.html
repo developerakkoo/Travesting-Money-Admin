@@ -1,0 +1,25 @@
+<ion-header [translucent]="true" class="ion-no-border">
+  <ion-toolbar>
+    <ion-title>Travesting Money Admin</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-grid fixed>
+    <ion-row>
+      <ion-col size="6" offset="3" >
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+            <ion-input labelPlacement="stacked" label="Enter Email" helperText="Enter your valid email" fill="outline"  required formControlName="email" type="text"></ion-input>
+            <br>
+            <ion-input labelPlacement="stacked" label="Enter Password"  fill="outline" required formControlName="password" type="text"></ion-input>
+          <br>
+            <ion-button mode="ios" fill="solid" expand="block" color="primary" type="submit" [disabled]="loginForm.invalid">
+            Login to Travesting Money
+          </ion-button>
+
+          
+        </form>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+</ion-content>

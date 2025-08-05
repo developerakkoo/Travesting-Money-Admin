@@ -1,0 +1,28 @@
+<ion-header [translucent]="true" class="ion-no-border">
+  <ion-toolbar>
+    <ion-title>Update your Blog!</ion-title>
+     <ion-buttons slot="start">
+      <ion-back-button defaultHref="blogs"></ion-back-button>
+    </ion-buttons>
+    <ion-button slot="end" (click)="upload()" >
+      Save new changes
+    </ion-button>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+<div class="NgxEditor__Wrapper">
+  <ngx-editor-menu [editor]="editor" 
+    [toolbar]="toolbar"
+  
+  > </ngx-editor-menu>
+  <ngx-editor
+    [editor]="editor"
+   [(ngModel)]="html"
+    [disabled]="false"
+    [placeholder]="'Type here...'"
+  >
+</ngx-editor>
+ <ngx-editor-floating-menu [editor]="editor"></ngx-editor-floating-menu>
+</div>
+</ion-content>
