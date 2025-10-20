@@ -1,40 +1,132 @@
 <ion-header [translucent]="true" class="ion-no-border">
   <ion-toolbar>
-    <ion-title>Blogs</ion-title>
-    <ion-button slot="end" (click)="createNewBlog()" expand="block">
-      Create new blog
+    <ion-title>📝 Blog Management</ion-title>
+    <ion-button
+      slot="end"
+      (click)="createNewBlog()"
+      fill="solid"
+      color="primary"
+    >
+      <ion-icon name="add" slot="start"></ion-icon>
+      New Blog
     </ion-button>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
+  <!-- Header Stats -->
+  <ion-card class="stats-card">
+    <ion-card-content>
+      <ion-grid>
+        <ion-row>
+          <ion-col size="6">
+            <div class="stat-item">
+              <ion-icon name="document-text" color="primary"></ion-icon>
+              <div class="stat-content">
+                <h3>{{blogs.length}}</h3>
+                <p>Total Blogs</p>
+              </div>
+            </div>
+          </ion-col>
+          <ion-col size="6">
+            <div class="stat-item">
+              <ion-icon name="time" color="success"></ion-icon>
+              <div class="stat-content">
+                <h3>{{blogs.length}}</h3>
+                <p>Published</p>
+              </div>
+            </div>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+    </ion-card-content>
+  </ion-card>
 
-  <ion-text color="medium" *ngIf="blogs.length == 0">
- <p>No Blogs Added!</p>
-  </ion-text>
-  <ion-list *ngIf="blogs.length > 0">
-    <ion-list-header>
-      <ion-label>All Published Blogs</ion-label>
-    </ion-list-header>
-    <ion-searchbar placeholder="Search Blogs" inputmode="decimal" type="decimal" (ionChange)="onSearchChange($event)" [debounce]="250" showCancelButton="always"></ion-searchbar>
-    
+  <!-- Search Bar -->
+  <ion-card class="search-card">
+    <ion-card-content>
+      <ion-searchbar
+        placeholder="Search blogs by title..."
+        (ionChange)="onSearchChange($event)"
+        [debounce]="250"
+        showCancelButton="always"
+        class="custom-searchbar"
+      >
+      </ion-searchbar>
+    </ion-card-content>
+  </ion-card>
 
-  <ion-item *ngFor="let item of blogs">
-    <ion-label>  <h2>{{ item.fields['title'].stringValue }}</h2>
-    <p *ngIf="item.fields['createdAt']"> Created At:- {{ item.fields['createdAt'].timestampValue | date: 'medium' }}</p>
-    <p *ngIf="item.fields['updatedAt']">Updated At:- {{ item.fields['updatedAt'].timestampValue | date: 'medium' }}</p>
-    </ion-label>
-    <ion-buttons slot="end">
-      <ion-button (click)="update(item)">
-        <ion-icon slot="start" name="create"></ion-icon>
-        
-      </ion-button>
-       <ion-button (click)="delete(item)">
-        <ion-icon color="danger" slot="start" name="trash"></ion-icon>
-        
-      </ion-button>
-    </ion-buttons>
-  </ion-item>
-  </ion-list>
-  
+  <!-- Empty State -->
+  <ion-card *ngIf="blogs.length === 0" class="empty-state">
+    <ion-card-content>
+      <div class="empty-content">
+        <ion-icon name="document-text-outline" size="large"></ion-icon>
+        <h2>No Blogs Yet</h2>
+        <p>Start creating amazing content for your audience!</p>
+        <ion-button (click)="createNewBlog()" fill="solid" color="primary">
+          <ion-icon name="add" slot="start"></ion-icon>
+          Create Your First Blog
+        </ion-button>
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Blog List -->
+  <div *ngIf="blogs.length > 0" class="blog-list">
+    <ion-card *ngFor="let blog of blogs; let i = index" class="blog-card">
+      <ion-card-content>
+        <div class="blog-header">
+          <div class="blog-info">
+            <h2 class="blog-title">{{ blog.fields['title'].stringValue }}</h2>
+            <div class="blog-meta">
+              <span class="meta-item">
+                <ion-icon name="calendar" size="small"></ion-icon>
+                Created: {{ blog.fields['createdAt']?.timestampValue | date:
+                'MMM dd, yyyy' }}
+              </span>
+              <span *ngIf="blog.fields['updatedAt']" class="meta-item">
+                <ion-icon name="refresh" size="small"></ion-icon>
+                Updated: {{ blog.fields['updatedAt'].timestampValue | date: 'MMM
+                dd, yyyy' }}
+              </span>
+            </div>
+          </div>
+          <div class="blog-actions">
+            <ion-button
+              (click)="update(blog)"
+              fill="clear"
+              color="primary"
+              size="small"
+              class="action-btn"
+            >
+              <ion-icon name="create" slot="icon-only"></ion-icon>
+            </ion-button>
+            <ion-button
+              (click)="delete(blog)"
+              fill="clear"
+              color="danger"
+              size="small"
+              class="action-btn"
+            >
+              <ion-icon name="trash" slot="icon-only"></ion-icon>
+            </ion-button>
+          </div>
+        </div>
+
+        <div class="blog-preview">
+          <p class="blog-excerpt">
+            {{ getBlogExcerpt(blog.fields['content']?.stringValue) }}
+          </p>
+        </div>
+
+        <div class="blog-footer">
+          <ion-chip color="primary" size="small">
+            <ion-icon name="document-text" slot="start"></ion-icon>
+            Blog Post
+          </ion-chip>
+          <span class="blog-id">ID: {{ blog.name.split('/').pop() }}</span>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </div>
 </ion-content>

@@ -1,0 +1,685 @@
+<ion-header [translucent]="true" class="ion-no-border">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/folder/dashboard"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Stock Recommendations 📈</ion-title>
+    <ion-buttons slot="end">
+      <ion-button
+        fill="clear"
+        (click)="openStockRecommendationEditor()"
+        color="success"
+      >
+        <ion-icon name="add" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <!-- Summary Stats -->
+  <ion-grid fixed>
+    <ion-row>
+      <ion-col size="12" size-md="4">
+        <ion-card class="stat-card">
+          <ion-card-content>
+            <div class="stat-content">
+              <div class="stat-icon">
+                <ion-icon name="trending-up" color="primary"></ion-icon>
+              </div>
+              <div class="stat-info">
+                <div class="stat-number">{{getTotalRecommendations()}}</div>
+                <div class="stat-label">Total Recommendations</div>
+              </div>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+      <ion-col size="12" size-md="4">
+        <ion-card class="stat-card">
+          <ion-card-content>
+            <div class="stat-content">
+              <div class="stat-icon">
+                <ion-icon name="arrow-up" color="success"></ion-icon>
+              </div>
+              <div class="stat-info">
+                <div class="stat-number">{{getRecommendationCount('BUY')}}</div>
+                <div class="stat-label">Buy Recommendations</div>
+              </div>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+      <ion-col size="12" size-md="4">
+        <ion-card class="stat-card">
+          <ion-card-content>
+            <div class="stat-content">
+              <div class="stat-icon">
+                <ion-icon name="arrow-down" color="danger"></ion-icon>
+              </div>
+              <div class="stat-info">
+                <div class="stat-number">
+                  {{getRecommendationCount('SELL')}}
+                </div>
+                <div class="stat-label">Sell Recommendations</div>
+              </div>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+
+  <!-- Search and Filters -->
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Search & Filter Recommendations</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-grid>
+        <ion-row>
+          <ion-col size="12" size-md="6">
+            <ion-searchbar
+              [(ngModel)]="searchTerm"
+              (ionInput)="onSearchChange()"
+              placeholder="Search by stock symbol, name, or reason..."
+              show-clear-button="focus"
+            ></ion-searchbar>
+          </ion-col>
+          <ion-col size="12" size-md="6">
+            <ion-button fill="outline" (click)="clearFilters()" color="medium">
+              <ion-icon name="refresh" slot="start"></ion-icon>
+              Clear Filters
+            </ion-button>
+          </ion-col>
+        </ion-row>
+        <ion-row>
+          <ion-col size="12" size-md="3">
+            <ion-item>
+              <ion-label position="stacked">Filter by User</ion-label>
+              <ion-select
+                [(ngModel)]="selectedUser"
+                (ionChange)="onFilterChange()"
+                placeholder="All Users"
+                interface="popover"
+              >
+                <ion-select-option value="">All Users</ion-select-option>
+                <ion-select-option
+                  *ngFor="let user of users"
+                  [value]="user.uid"
+                >
+                  {{user.name}}
+                </ion-select-option>
+              </ion-select>
+            </ion-item>
+          </ion-col>
+          <ion-col size="12" size-md="3">
+            <ion-item>
+              <ion-label position="stacked">Filter by Subscription</ion-label>
+              <ion-select
+                [(ngModel)]="selectedSubscription"
+                (ionChange)="onFilterChange()"
+                placeholder="All Subscriptions"
+                interface="popover"
+              >
+                <ion-select-option value=""
+                  >All Subscriptions</ion-select-option
+                >
+                <ion-select-option value="wealth-builder"
+                  >Wealth Builder</ion-select-option
+                >
+                <ion-select-option value="premium">Premium</ion-select-option>
+                <ion-select-option value="basic">Basic</ion-select-option>
+              </ion-select>
+            </ion-item>
+          </ion-col>
+          <ion-col size="12" size-md="3">
+            <ion-item>
+              <ion-label position="stacked">Filter by Type</ion-label>
+              <ion-select
+                [(ngModel)]="selectedRecommendationType"
+                (ionChange)="onFilterChange()"
+                placeholder="All Types"
+                interface="popover"
+              >
+                <ion-select-option value="">All Types</ion-select-option>
+                <ion-select-option value="BUY">Buy</ion-select-option>
+                <ion-select-option value="SELL">Sell</ion-select-option>
+              </ion-select>
+            </ion-item>
+          </ion-col>
+          <ion-col size="12" size-md="3">
+            <ion-button
+              fill="solid"
+              (click)="openStockRecommendationEditor()"
+              color="success"
+            >
+              <ion-icon name="add" slot="start"></ion-icon>
+              New Recommendation
+            </ion-button>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Recommendations Table -->
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>
+        All Recommendations ({{filteredRecommendations.length}} found)
+      </ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <div class="table-container">
+        <table class="recommendations-table">
+          <thead>
+            <tr>
+              <th>Sr. No</th>
+              <th>User</th>
+              <th>Stock Symbol</th>
+              <th>Stock Name</th>
+              <th>Recommendation</th>
+              <th>Current Price</th>
+              <th>Target Price</th>
+              <th>Created At</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr
+              *ngFor="let rec of getPaginatedRecommendations(); let i = index"
+            >
+              <td>{{(currentPage - 1) * itemsPerPage + i + 1}}</td>
+              <td>
+                <div class="user-info">
+                  <div class="user-name">{{getUserName(rec.userId)}}</div>
+                  <div class="user-subscriptions">
+                    <ion-chip
+                      *ngFor="let sub of getUserSubscriptions(rec.userId); trackBy: trackBySubscription"
+                      size="small"
+                      [color]="getSubscriptionBadgeColor(sub)"
+                    >
+                      {{sub}}
+                    </ion-chip>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <ion-chip size="small" color="primary"
+                  >{{rec.stockSymbol}}</ion-chip
+                >
+              </td>
+              <td>{{rec.stockName}}</td>
+              <td>
+                <ion-badge
+                  [color]="rec.recommendation === 'BUY' ? 'success' : 'danger'"
+                >
+                  {{rec.recommendation}}
+                </ion-badge>
+              </td>
+              <td>₹{{rec.currentPrice}}</td>
+              <td>₹{{rec.targetPrice}}</td>
+              <td>{{formatDate(rec.createdAt)}}</td>
+              <td>
+                <div class="action-buttons">
+                  <ion-button
+                    fill="clear"
+                    size="small"
+                    color="primary"
+                    (click)="openEditModal(rec)"
+                    title="Edit Recommendation"
+                  >
+                    <ion-icon name="create" slot="icon-only"></ion-icon>
+                  </ion-button>
+                  <ion-button
+                    fill="clear"
+                    size="small"
+                    color="danger"
+                    (click)="deleteRecommendation(rec)"
+                    title="Delete Recommendation"
+                  >
+                    <ion-icon name="trash" slot="icon-only"></ion-icon>
+                  </ion-button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Empty State -->
+        <div class="empty-state" *ngIf="filteredRecommendations.length === 0">
+          <ion-icon name="trending-up-outline"></ion-icon>
+          <h3>No Recommendations Found</h3>
+          <p>Try adjusting your search or filter criteria</p>
+          <ion-button fill="outline" (click)="openStockRecommendationEditor()">
+            <ion-icon name="add" slot="start"></ion-icon>
+            Create First Recommendation
+          </ion-button>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination-container" *ngIf="getTotalPages() > 1">
+        <ion-button
+          fill="clear"
+          (click)="goToPage(currentPage - 1)"
+          [disabled]="currentPage === 1"
+        >
+          <ion-icon name="chevron-back" slot="icon-only"></ion-icon>
+        </ion-button>
+
+        <span class="page-info">
+          Page {{currentPage}} of {{getTotalPages()}}
+        </span>
+
+        <ion-button
+          fill="clear"
+          (click)="goToPage(currentPage + 1)"
+          [disabled]="currentPage === getTotalPages()"
+        >
+          <ion-icon name="chevron-forward" slot="icon-only"></ion-icon>
+        </ion-button>
+      </div>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Edit Recommendation Modal -->
+  <ion-modal [isOpen]="isEditModalOpen" (didDismiss)="closeEditModal()">
+    <ng-template>
+      <ion-header>
+        <ion-toolbar>
+          <ion-title>Edit Stock Recommendation</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="closeEditModal()">
+              <ion-icon name="close" slot="icon-only"></ion-icon>
+            </ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+
+      <ion-content class="ion-padding">
+        <div *ngIf="editedRecommendation" class="edit-form">
+          <!-- Basic Stock Info -->
+          <ion-card>
+            <ion-card-header>
+              <ion-card-title>Stock Information</ion-card-title>
+            </ion-card-header>
+            <ion-card-content>
+              <ion-item>
+                <ion-label position="stacked">Stock Symbol</ion-label>
+                <ion-input
+                  [(ngModel)]="editedRecommendation.stockSymbol"
+                  placeholder="e.g., RELIANCE"
+                ></ion-input>
+              </ion-item>
+
+              <ion-item>
+                <ion-label position="stacked">Stock Name</ion-label>
+                <ion-input
+                  [(ngModel)]="editedRecommendation.stockName"
+                  placeholder="e.g., Reliance Industries Ltd"
+                ></ion-input>
+              </ion-item>
+
+              <ion-item>
+                <ion-label position="stacked">Stock Exchange</ion-label>
+                <ion-select
+                  [(ngModel)]="editedRecommendation.stockExchange"
+                  placeholder="Select Exchange"
+                >
+                  <ion-select-option value="NSE">NSE</ion-select-option>
+                  <ion-select-option value="BSE">BSE</ion-select-option>
+                </ion-select>
+              </ion-item>
+
+              <ion-item>
+                <ion-label position="stacked">Term</ion-label>
+                <ion-select
+                  [(ngModel)]="editedRecommendation.term"
+                  placeholder="Select Term"
+                >
+                  <ion-select-option value="short">Short</ion-select-option>
+                  <ion-select-option value="mid">Mid</ion-select-option>
+                  <ion-select-option value="long">Long</ion-select-option>
+                </ion-select>
+              </ion-item>
+
+              <ion-item>
+                <ion-label position="stacked">Recommendation</ion-label>
+                <ion-select
+                  [(ngModel)]="editedRecommendation.recommendation"
+                  placeholder="Select Type"
+                >
+                  <ion-select-option value="BUY">Buy</ion-select-option>
+                  <ion-select-option value="SELL">Sell</ion-select-option>
+                  <ion-select-option value="HOLD">Hold</ion-select-option>
+                </ion-select>
+              </ion-item>
+
+              <ion-item>
+                <ion-label position="stacked">Date</ion-label>
+                <ion-input
+                  type="date"
+                  [(ngModel)]="editedRecommendation.date"
+                ></ion-input>
+              </ion-item>
+            </ion-card-content>
+          </ion-card>
+
+          <!-- Price Information -->
+          <ion-card>
+            <ion-card-header>
+              <ion-card-title>Price Details</ion-card-title>
+            </ion-card-header>
+            <ion-card-content>
+              <ion-grid>
+                <ion-row>
+                  <ion-col size="12" size-md="6">
+                    <ion-item>
+                      <ion-label position="stacked"
+                        >Current Market Price (CMP)</ion-label
+                      >
+                      <ion-input
+                        type="number"
+                        [(ngModel)]="editedRecommendation.cmp"
+                        placeholder="0.00"
+                      ></ion-input>
+                    </ion-item>
+                  </ion-col>
+                  <ion-col size="12" size-md="6">
+                    <ion-item>
+                      <ion-label position="stacked">Change %</ion-label>
+                      <ion-input
+                        type="number"
+                        [(ngModel)]="editedRecommendation.changePct"
+                        placeholder="0.00"
+                      ></ion-input>
+                    </ion-item>
+                  </ion-col>
+                </ion-row>
+
+                <ion-row>
+                  <ion-col size="12" size-md="6">
+                    <ion-item>
+                      <ion-label position="stacked">Entry Price</ion-label>
+                      <ion-input
+                        type="number"
+                        [(ngModel)]="editedRecommendation.entryPrice"
+                        placeholder="0.00"
+                      ></ion-input>
+                    </ion-item>
+                  </ion-col>
+                  <ion-col size="12" size-md="6">
+                    <ion-item>
+                      <ion-label position="stacked">Current Price</ion-label>
+                      <ion-input
+                        type="number"
+                        [(ngModel)]="editedRecommendation.currentPrice"
+                        (ionChange)="calculatePotentialPct()"
+                        placeholder="0.00"
+                      ></ion-input>
+                    </ion-item>
+                  </ion-col>
+                </ion-row>
+
+                <ion-row>
+                  <ion-col size="12" size-md="4">
+                    <ion-item>
+                      <ion-label position="stacked">Entry Range Min</ion-label>
+                      <ion-input
+                        type="number"
+                        [(ngModel)]="editedRecommendation.entryRangeMin"
+                        placeholder="0.00"
+                      ></ion-input>
+                    </ion-item>
+                  </ion-col>
+                  <ion-col size="12" size-md="4">
+                    <ion-item>
+                      <ion-label position="stacked">Entry Range Max</ion-label>
+                      <ion-input
+                        type="number"
+                        [(ngModel)]="editedRecommendation.entryRangeMax"
+                        placeholder="0.00"
+                      ></ion-input>
+                    </ion-item>
+                  </ion-col>
+                  <ion-col size="12" size-md="4">
+                    <ion-item>
+                      <ion-label position="stacked">Stop Loss</ion-label>
+                      <ion-input
+                        type="number"
+                        [(ngModel)]="editedRecommendation.stoploss"
+                        placeholder="0.00"
+                      ></ion-input>
+                    </ion-item>
+                  </ion-col>
+                </ion-row>
+
+                <ion-row>
+                  <ion-col size="12" size-md="6">
+                    <ion-item>
+                      <ion-label position="stacked">Target Price</ion-label>
+                      <ion-input
+                        type="number"
+                        [(ngModel)]="editedRecommendation.targetPrice"
+                        (ionChange)="calculatePotentialPct()"
+                        placeholder="0.00"
+                      ></ion-input>
+                    </ion-item>
+                  </ion-col>
+                  <ion-col size="12" size-md="6">
+                    <ion-item>
+                      <ion-label position="stacked">Potential %</ion-label>
+                      <ion-input
+                        type="number"
+                        [(ngModel)]="editedRecommendation.potentialLeftPct"
+                        placeholder="0.00"
+                        readonly
+                      ></ion-input>
+                    </ion-item>
+                  </ion-col>
+                </ion-row>
+
+                <ion-row>
+                  <ion-col size="12">
+                    <ion-item>
+                      <ion-label position="stacked">Duration</ion-label>
+                      <ion-input
+                        [(ngModel)]="editedRecommendation.durationText"
+                        placeholder="e.g., 3-6 months"
+                      ></ion-input>
+                    </ion-item>
+                  </ion-col>
+                </ion-row>
+              </ion-grid>
+            </ion-card-content>
+          </ion-card>
+
+          <!-- Trade Actions -->
+          <ion-card>
+            <ion-card-header>
+              <div class="section-header-with-button">
+                <ion-card-title>
+                  Trade Actions
+                  <ion-chip color="primary">
+                    {{(editedRecommendation.actions || []).length}}
+                  </ion-chip>
+                </ion-card-title>
+                <ion-button
+                  fill="outline"
+                  size="small"
+                  (click)="addNewAction()"
+                >
+                  <ion-icon name="add" slot="start"></ion-icon>
+                  Add Action
+                </ion-button>
+              </div>
+            </ion-card-header>
+            <ion-card-content>
+              <div
+                *ngIf="!editedRecommendation.actions || editedRecommendation.actions.length === 0"
+                class="empty-state-small"
+              >
+                <p>No actions added yet</p>
+              </div>
+
+              <ion-card
+                *ngFor="let action of editedRecommendation.actions; let i = index"
+                class="action-item-card"
+              >
+                <ion-card-content>
+                  <div class="action-header-row">
+                    <ion-select
+                      [(ngModel)]="action.type"
+                      placeholder="Action Type"
+                    >
+                      <ion-select-option value="AVERAGING"
+                        >Averaging</ion-select-option
+                      >
+                      <ion-select-option value="PARTIAL_BOOKING"
+                        >Partial Booking</ion-select-option
+                      >
+                    </ion-select>
+                    <ion-button
+                      fill="clear"
+                      size="small"
+                      color="danger"
+                      (click)="removeAction(i)"
+                    >
+                      <ion-icon name="trash" slot="icon-only"></ion-icon>
+                    </ion-button>
+                  </div>
+
+                  <ion-grid class="ion-no-padding">
+                    <ion-row>
+                      <ion-col size="12" size-md="6">
+                        <ion-item>
+                          <ion-label position="stacked">Date</ion-label>
+                          <ion-input
+                            type="date"
+                            [(ngModel)]="action.date"
+                          ></ion-input>
+                        </ion-item>
+                      </ion-col>
+                      <ion-col size="12" size-md="6">
+                        <ion-item>
+                          <ion-label position="stacked">Entry Price</ion-label>
+                          <ion-input
+                            type="number"
+                            [(ngModel)]="action.entryPrice"
+                            placeholder="0.00"
+                          ></ion-input>
+                        </ion-item>
+                      </ion-col>
+                    </ion-row>
+
+                    <ion-row>
+                      <ion-col size="12" size-md="6">
+                        <ion-item>
+                          <ion-label position="stacked">Range Min</ion-label>
+                          <ion-input
+                            type="number"
+                            [(ngModel)]="action.entryRangeMin"
+                            placeholder="0.00"
+                          ></ion-input>
+                        </ion-item>
+                      </ion-col>
+                      <ion-col size="12" size-md="6">
+                        <ion-item>
+                          <ion-label position="stacked">Range Max</ion-label>
+                          <ion-input
+                            type="number"
+                            [(ngModel)]="action.entryRangeMax"
+                            placeholder="0.00"
+                          ></ion-input>
+                        </ion-item>
+                      </ion-col>
+                    </ion-row>
+
+                    <ion-row>
+                      <ion-col size="12">
+                        <ion-item>
+                          <ion-label position="stacked"
+                            >Note (Optional)</ion-label
+                          >
+                          <ion-input
+                            [(ngModel)]="action.note"
+                            placeholder="Add a note..."
+                          ></ion-input>
+                        </ion-item>
+                      </ion-col>
+                    </ion-row>
+                  </ion-grid>
+                </ion-card-content>
+              </ion-card>
+            </ion-card-content>
+          </ion-card>
+
+          <!-- Alerts -->
+          <ion-card>
+            <ion-card-header>
+              <div class="section-header-with-button">
+                <ion-card-title>
+                  Alerts
+                  <ion-chip color="warning">
+                    {{(editedRecommendation.alerts || []).length}}
+                  </ion-chip>
+                </ion-card-title>
+                <ion-button fill="outline" size="small" (click)="addNewAlert()">
+                  <ion-icon name="add" slot="start"></ion-icon>
+                  Add Alert
+                </ion-button>
+              </div>
+            </ion-card-header>
+            <ion-card-content>
+              <div
+                *ngIf="!editedRecommendation.alerts || editedRecommendation.alerts.length === 0"
+                class="empty-state-small"
+              >
+                <p>No alerts added yet</p>
+              </div>
+
+              <ion-chip
+                *ngFor="let alert of editedRecommendation.alerts; let i = index"
+                color="warning"
+              >
+                <ion-icon name="notifications"></ion-icon>
+                <ion-label>{{alert}}</ion-label>
+                <ion-icon name="close" (click)="removeAlert(i)"></ion-icon>
+              </ion-chip>
+            </ion-card-content>
+          </ion-card>
+
+          <!-- Reason -->
+          <ion-card>
+            <ion-card-header>
+              <ion-card-title>Reason / Notes</ion-card-title>
+            </ion-card-header>
+            <ion-card-content>
+              <ion-item>
+                <ion-label position="stacked">Reason</ion-label>
+                <ion-textarea
+                  [(ngModel)]="editedRecommendation.reason"
+                  placeholder="Enter reason for recommendation"
+                  rows="4"
+                ></ion-textarea>
+              </ion-item>
+            </ion-card-content>
+          </ion-card>
+
+          <!-- Action Buttons -->
+          <div class="modal-actions">
+            <ion-button fill="outline" (click)="closeEditModal()">
+              Cancel
+            </ion-button>
+            <ion-button color="success" (click)="updateRecommendation()">
+              <ion-icon name="save" slot="start"></ion-icon>
+              Update Recommendation
+            </ion-button>
+          </div>
+        </div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+</ion-content>

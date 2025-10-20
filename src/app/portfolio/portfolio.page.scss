@@ -1,0 +1,242 @@
+// Portfolio page styles
+
+// Chart styles
+.chart-container {
+  text-align: center;
+  padding: 16px;
+  
+  h3 {
+    margin: 0 0 16px 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--ion-color-dark);
+  }
+  
+  .chart-wrapper {
+    position: relative;
+    height: 300px;
+    width: 100%;
+    
+    canvas {
+      max-height: 100%;
+      max-width: 100%;
+    }
+  }
+}
+
+.stat-card {
+  margin-bottom: 16px;
+  
+  .stat-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    
+    .stat-icon {
+      font-size: 2rem;
+      opacity: 0.8;
+    }
+    
+    .stat-info {
+      flex: 1;
+      
+      .stat-number {
+        font-size: 1.8rem;
+        font-weight: bold;
+        color: var(--ion-color-primary);
+        margin-bottom: 4px;
+      }
+      
+      .stat-label {
+        font-size: 0.9rem;
+        color: var(--ion-color-medium);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+    }
+  }
+}
+
+.table-container {
+  overflow-x: auto;
+  margin-bottom: 16px;
+}
+
+.holdings-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  
+  thead {
+    background: var(--ion-color-primary);
+    color: white;
+    
+    th {
+      padding: 12px 8px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      
+      &:first-child {
+        padding-left: 16px;
+      }
+      
+      &:last-child {
+        padding-right: 16px;
+        text-align: center;
+      }
+    }
+  }
+  
+  tbody {
+    tr {
+      border-bottom: 1px solid var(--ion-color-light);
+      transition: background-color 0.2s ease;
+      
+      &:hover {
+        background-color: var(--ion-color-light-tint);
+      }
+      
+      &:last-child {
+        border-bottom: none;
+      }
+      
+      td {
+        padding: 12px 8px;
+        font-size: 0.9rem;
+        
+        &:first-child {
+          padding-left: 16px;
+          font-weight: 500;
+          color: var(--ion-color-medium);
+        }
+        
+        &:last-child {
+          padding-right: 16px;
+          text-align: center;
+          
+          ion-button {
+            margin: 0 2px;
+          }
+        }
+      }
+    }
+  }
+}
+
+.holding-name {
+  font-weight: 500;
+  color: var(--ion-color-dark);
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.percentage-display {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  
+  ion-badge {
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+}
+
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--ion-color-medium);
+  
+  ion-icon {
+    font-size: 4rem;
+    margin-bottom: 16px;
+    opacity: 0.5;
+  }
+  
+  h3 {
+    margin: 0 0 8px 0;
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: var(--ion-color-dark);
+  }
+  
+  p {
+    margin: 0 0 24px 0;
+    font-size: 0.9rem;
+    line-height: 1.4;
+  }
+}
+
+.pagination-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 24px;
+  padding: 16px;
+  
+  .page-info {
+    font-size: 0.9rem;
+    color: var(--ion-color-medium);
+    font-weight: 500;
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .holdings-table {
+    font-size: 0.8rem;
+    
+    thead th {
+      padding: 8px 4px;
+      font-size: 0.8rem;
+    }
+    
+    tbody td {
+      padding: 8px 4px;
+    }
+  }
+  
+  .holding-name {
+    max-width: 120px;
+  }
+  
+  .stat-content {
+    gap: 12px;
+    
+    .stat-icon {
+      font-size: 1.5rem;
+    }
+    
+    .stat-number {
+      font-size: 1.5rem;
+    }
+  }
+}
+
+// Dark mode support
+@media (prefers-color-scheme: dark) {
+  .holdings-table {
+    background: var(--ion-color-dark);
+    color: var(--ion-color-light);
+    
+    tbody tr:hover {
+      background-color: var(--ion-color-dark-tint);
+    }
+  }
+  
+  .holding-name {
+    color: var(--ion-color-light);
+  }
+  
+  .empty-state h3 {
+    color: var(--ion-color-light);
+  }
+}

@@ -1,0 +1,23 @@
+rules_version = '2';
+
+// Craft rules based on data in your Firestore database
+// allow write: if firestore.get(
+//    /databases/(default)/documents/users/$(request.auth.uid)).data.isAdmin;
+service firebase.storage {
+  match /b/{bucket}/o {
+    // Allow read/write access to stock images for all users
+    match /stock-images/{allPaths=**} {
+      allow read, write: if true;
+    }
+    
+    // Allow read/write access to research reports for all users
+    match /research-reports/{allPaths=**} {
+      allow read, write: if true;
+    }
+    
+    // Default rule - deny all other access
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

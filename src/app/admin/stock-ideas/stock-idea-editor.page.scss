@@ -1,0 +1,758 @@
+// Stock Idea Editor Styling
+
+// CSS Variables for term colors
+:root {
+  --term-short: #2563eb;
+  --term-mid: #f59e0b;
+  --term-long: #10b981;
+}
+
+// Header styling
+ion-toolbar {
+  --background: linear-gradient(135deg, var(--ion-color-primary), var(--ion-color-primary-shade));
+  --color: white;
+  
+  ion-title {
+    font-weight: 600;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    
+    .status-chip {
+      font-size: 0.7rem;
+      height: 20px;
+    }
+  }
+}
+
+// Editor container
+.editor-container {
+  padding: 16px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+// Card styling
+ion-card {
+  margin: 8px 0;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  }
+}
+
+// Info card
+.info-card {
+  background: linear-gradient(135deg, var(--ion-color-primary-tint), var(--ion-color-primary));
+  color: white;
+  margin-bottom: 16px;
+
+  .info-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+
+    .label {
+      font-size: 0.8rem;
+      opacity: 0.9;
+      margin-bottom: 4px;
+    }
+
+    .value {
+      font-size: 1.2rem;
+      font-weight: 600;
+      
+      &.positive {
+        color: #10b981;
+      }
+      
+      &.negative {
+        color: #ef4444;
+      }
+    }
+  }
+}
+
+// Main card
+.main-card {
+  margin-bottom: 16px;
+
+  // Stock header
+  .stock-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin-bottom: 20px;
+    padding: 16px;
+    background: var(--ion-color-light-tint);
+    border-radius: 8px;
+
+    .symbol-circle {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: var(--ion-color-primary);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      font-weight: 600;
+      flex-shrink: 0;
+
+      .symbol-input {
+        --background: transparent;
+        --color: white;
+        --placeholder-color: rgba(255, 255, 255, 0.7);
+        text-align: center;
+        font-weight: bold;
+        font-size: 1rem;
+        text-transform: uppercase;
+        
+        input {
+          text-align: center;
+          font-weight: bold;
+          text-transform: uppercase;
+        }
+      }
+    }
+
+    .stock-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+
+      .stock-name-item {
+        --background: transparent;
+        --border-width: 0;
+        --padding-start: 0;
+        --padding-end: 0;
+        --inner-padding-end: 0;
+
+        .stock-name-input {
+          --background: white;
+          --border-radius: 6px;
+          --padding-start: 12px;
+          --padding-end: 12px;
+          font-size: 1.3rem;
+          font-weight: 600;
+        }
+      }
+
+      .cmp-info {
+        display: flex;
+        gap: 12px;
+
+        .cmp-item,
+        .change-item {
+          --background: transparent;
+          --border-width: 0;
+          --padding-start: 0;
+          --padding-end: 0;
+          --inner-padding-end: 0;
+          flex: 1;
+
+          ion-label {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--ion-color-medium);
+          }
+
+          ion-input {
+            --background: white;
+            --border-radius: 6px;
+            --padding-start: 12px;
+            --padding-end: 12px;
+            font-weight: 600;
+            font-size: 0.9rem;
+          }
+        }
+      }
+
+      .formatted-display {
+        margin-top: 8px;
+        padding: 8px 12px;
+        background: rgba(var(--ion-color-primary-rgb), 0.1);
+        border-radius: 6px;
+        border-left: 3px solid var(--ion-color-primary);
+
+        .display-text {
+          font-size: 0.9rem;
+          font-weight: 600;
+          color: var(--ion-color-dark);
+
+          .positive {
+            color: var(--ion-color-success);
+          }
+
+          .negative {
+            color: var(--ion-color-danger);
+          }
+        }
+      }
+    }
+  }
+
+  // Image upload section
+  .image-upload-section {
+    margin-bottom: 20px;
+    padding: 16px;
+    background: var(--ion-color-light-tint);
+    border-radius: 8px;
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+
+      h3 {
+        margin: 0;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--ion-color-dark);
+      }
+    }
+
+    .image-preview-container {
+      margin-top: 12px;
+
+      .image-preview {
+        position: relative;
+        display: inline-block;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
+        img {
+          max-width: 200px;
+          max-height: 150px;
+          width: auto;
+          height: auto;
+          display: block;
+        }
+
+        .image-actions {
+          position: absolute;
+          top: 4px;
+          right: 4px;
+          display: flex;
+          gap: 4px;
+          opacity: 0;
+          transition: opacity 0.2s ease;
+
+          ion-button {
+            --background: rgba(0, 0, 0, 0.7);
+            --color: white;
+            --padding-start: 6px;
+            --padding-end: 6px;
+            --border-radius: 4px;
+            height: 28px;
+            width: 28px;
+          }
+        }
+
+        &:hover .image-actions {
+          opacity: 1;
+        }
+      }
+
+      .no-image-placeholder {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 20px;
+        border: 2px dashed var(--ion-color-medium);
+        border-radius: 8px;
+        background: var(--ion-color-light);
+        color: var(--ion-color-medium);
+
+        ion-icon {
+          font-size: 3rem;
+          margin-bottom: 12px;
+        }
+
+        p {
+          margin: 4px 0;
+          font-size: 0.9rem;
+
+          &.help-text {
+            font-size: 0.8rem;
+            opacity: 0.7;
+          }
+        }
+      }
+    }
+
+    .upload-progress {
+      margin-top: 12px;
+
+      .progress-text {
+        margin: 8px 0 0 0;
+        font-size: 0.8rem;
+        color: var(--ion-color-medium);
+        text-align: center;
+      }
+    }
+  }
+
+  // Action section
+  .action-section {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+
+    .action-segment {
+      flex: 1;
+
+      .buy-btn {
+        --background: #16a34a;
+        --color: white;
+      }
+
+      .sell-btn {
+        --background: #ef4444;
+        --color: white;
+      }
+    }
+  }
+
+  // Alert section
+  .alert-section {
+    margin-bottom: 20px;
+
+    .alerts-list {
+      margin-top: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+
+      .alert-chip {
+        font-size: 0.8rem;
+      }
+    }
+  }
+
+  // Form section
+  .form-section {
+    margin-bottom: 20px;
+
+    ion-item {
+      --padding-start: 0;
+      --padding-end: 0;
+      margin-bottom: 8px;
+    }
+  }
+
+  // Actions section
+  .actions-section {
+    margin-bottom: 20px;
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+
+      h3 {
+        margin: 0;
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--ion-color-dark);
+      }
+    }
+
+    .actions-list {
+      .action-card {
+        margin-bottom: 12px;
+        border-left: 4px solid var(--ion-color-primary);
+
+        .action-header {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 12px;
+
+          ion-select {
+            flex: 1;
+          }
+        }
+
+        .action-fields {
+          ion-item {
+            --padding-start: 0;
+            --padding-end: 0;
+            margin-bottom: 8px;
+          }
+        }
+      }
+    }
+  }
+
+  // Targets section
+  .targets-section {
+    margin-bottom: 20px;
+
+    ion-item {
+      --padding-start: 0;
+      --padding-end: 0;
+      margin-bottom: 8px;
+    }
+
+    .calculated-target {
+      margin-top: 8px;
+      text-align: center;
+      
+      ion-chip {
+        font-weight: 600;
+        font-size: 0.9rem;
+      }
+    }
+
+    .percentage-symbol {
+      color: var(--ion-color-medium);
+      font-weight: 500;
+      font-size: 0.9rem;
+      margin-left: 4px;
+    }
+  }
+
+  // Warning section
+  .warning-section {
+    margin-bottom: 20px;
+    text-align: center;
+
+    .warning-chip {
+      font-size: 0.9rem;
+    }
+  }
+
+  // Recent updates section
+  .recent-updates-section {
+    margin-bottom: 20px;
+
+    h3 {
+      margin: 0 0 8px 0;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--ion-color-dark);
+    }
+
+    .updates-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+
+      .update-chip {
+        font-size: 0.8rem;
+      }
+    }
+  }
+}
+
+// Footer card
+.footer-card {
+  margin-bottom: 16px;
+
+  .footer-buttons {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+
+    ion-button {
+      --border-radius: 8px;
+      font-weight: 500;
+      text-transform: none;
+    }
+  }
+}
+
+// Bottom actions card
+.bottom-actions-card {
+  .bottom-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+
+    ion-button {
+      --border-radius: 8px;
+      font-weight: 500;
+      text-transform: none;
+      flex: 1;
+      min-width: 200px;
+    }
+  }
+
+  // Research report info
+  .report-info {
+    margin-top: 12px;
+    padding: 12px;
+    background: var(--ion-color-success-tint);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    ion-chip {
+      margin: 0;
+    }
+  }
+
+  // Upload progress for research report
+  .upload-progress {
+    margin-top: 12px;
+
+    .progress-text {
+      margin: 8px 0 0 0;
+      font-size: 0.8rem;
+      color: var(--ion-color-medium);
+      text-align: center;
+    }
+  }
+}
+
+// Term chip styling
+.term-chip {
+  &.short {
+    background: var(--term-short);
+    color: white;
+  }
+
+  &.mid {
+    background: var(--term-mid);
+    color: black;
+  }
+
+  &.long {
+    background: var(--term-long);
+    color: black;
+  }
+}
+
+// Form validation styling
+ion-item {
+  &.ion-invalid.ion-touched {
+    --border-color: var(--ion-color-danger);
+  }
+
+  &.ion-valid.ion-touched {
+    --border-color: var(--ion-color-success);
+  }
+}
+
+// Loading states
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .editor-container {
+    padding: 8px;
+  }
+
+  .main-card {
+    .stock-header {
+      flex-direction: column;
+      text-align: center;
+      gap: 12px;
+
+      .symbol-circle {
+        width: 50px;
+        height: 50px;
+        font-size: 1rem;
+        align-self: center;
+      }
+
+      .stock-info {
+        .cmp-info {
+          flex-direction: column;
+          gap: 8px;
+        }
+      }
+    }
+
+    .action-section {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+
+      .action-segment {
+        width: 100%;
+      }
+    }
+
+    .targets-section {
+      ion-grid {
+        ion-row {
+          ion-col {
+            margin-bottom: 8px;
+          }
+        }
+      }
+    }
+  }
+
+  .footer-card .footer-buttons {
+    flex-direction: column;
+    align-items: stretch;
+
+    ion-button {
+      width: 100%;
+    }
+  }
+
+  .bottom-actions-card .bottom-actions {
+    flex-direction: column;
+    align-items: stretch;
+
+    ion-button {
+      width: 100%;
+      min-width: auto;
+    }
+  }
+}
+
+@media (max-width: 576px) {
+  ion-toolbar {
+    ion-title {
+      font-size: 1rem;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 4px;
+    }
+  }
+
+  .main-card {
+    .stock-header {
+      padding: 12px;
+
+      .symbol-circle {
+        width: 40px;
+        height: 40px;
+        font-size: 0.9rem;
+      }
+
+      .stock-info {
+        .stock-name-item .stock-name-input {
+          font-size: 1.1rem;
+        }
+
+        .cmp-info {
+          .cmp-item,
+          .change-item {
+            ion-input {
+              font-size: 0.8rem;
+            }
+          }
+        }
+      }
+    }
+
+    .actions-section .actions-list .action-card {
+      .action-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+
+        ion-select {
+          width: 100%;
+        }
+      }
+    }
+  }
+}
+
+// Animation classes
+.fade-in {
+  animation: fadeIn 0.3s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+// Success/Error states
+.success-message {
+  color: var(--ion-color-success);
+  font-weight: 500;
+}
+
+.error-message {
+  color: var(--ion-color-danger);
+  font-weight: 500;
+}
+
+// Custom scrollbar
+ion-content {
+  --offset-bottom: 0px;
+}
+
+// Accessibility improvements
+ion-button {
+  &[aria-label] {
+    position: relative;
+  }
+}
+
+// Focus states
+ion-input:focus-within,
+ion-select:focus-within {
+  --border-color: var(--ion-color-primary);
+}
+
+// High contrast mode support
+@media (prefers-contrast: high) {
+  .term-chip {
+    &.short {
+      background: #0000ff;
+      color: white;
+    }
+
+    &.mid {
+      background: #ff8c00;
+      color: black;
+    }
+
+    &.long {
+      background: #008000;
+      color: white;
+    }
+  }
+}

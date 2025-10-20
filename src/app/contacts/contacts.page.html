@@ -1,0 +1,61 @@
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Contacts</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title size="large">Contacts</ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <!-- Contacts List -->
+  <ion-list>
+    <ion-item *ngFor="let contact of contacts; trackBy: trackByContactId">
+      <ion-avatar slot="start">
+        <ion-icon
+          [name]="getStatusIcon(contact.status)"
+          [color]="getStatusColor(contact.status)"
+          size="large"
+        >
+        </ion-icon>
+      </ion-avatar>
+      <ion-label button (click)="showContactDetails(contact)">
+        <h2>{{ contact.name }}</h2>
+        <h3>{{ contact.email }}</h3>
+        <p>{{ contact.service }} • {{ contact.source }}</p>
+        <p class="contact-message">
+          {{ contact.message | slice:0:100 }}{{ contact.message.length > 100 ?
+          '...' : '' }}
+        </p>
+        <ion-chip [color]="getStatusColor(contact.status)" class="status-chip">
+          <ion-label>{{ contact.status | titlecase }}</ion-label>
+        </ion-chip>
+      </ion-label>
+      <ion-note slot="end">
+        <div class="contact-date">{{ formatDate(contact.timestamp) }}</div>
+        <ion-button
+          fill="clear"
+          color="danger"
+          size="small"
+          (click)="deleteContact(contact)"
+          class="delete-btn"
+        >
+          <ion-icon name="trash" slot="icon-only"></ion-icon>
+        </ion-button>
+      </ion-note>
+    </ion-item>
+  </ion-list>
+
+  <!-- Empty State -->
+  <div *ngIf="contacts.length === 0" class="empty-state">
+    <ion-icon name="mail" size="large" color="medium"></ion-icon>
+    <h2>No contacts found</h2>
+    <p>No contacts available.</p>
+  </div>
+</ion-content>

@@ -1,28 +1,110 @@
 <ion-header [translucent]="true" class="ion-no-border">
   <ion-toolbar>
-    <ion-title>Edit your Blog!</ion-title>
+    <ion-title>✍️ Blog Editor</ion-title>
     <ion-buttons slot="start">
-      <ion-back-button defaultHref="blogs"></ion-back-button>
+      <ion-back-button defaultHref="blogs" color="light"></ion-back-button>
     </ion-buttons>
-    <ion-button slot="end" (click)="upload()" expand="block" shape="round">
-      Publish
+    <ion-button
+      slot="end"
+      (click)="upload()"
+      fill="solid"
+      color="success"
+      shape="round"
+    >
+      <ion-icon name="send" slot="start"></ion-icon>
+      Publish Blog
     </ion-button>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
-<div class="NgxEditor__Wrapper">
-  <ngx-editor-menu [editor]="editor" 
-    [toolbar]="toolbar"
-  
-  > </ngx-editor-menu>
-  <ngx-editor
-    [editor]="editor"
-   [(ngModel)]="html"
-    [disabled]="false"
-    [placeholder]="'Type here...'"
-  >
-</ngx-editor>
- <ngx-editor-floating-menu [editor]="editor"></ngx-editor-floating-menu>
-</div>
+  <!-- Editor Container -->
+  <div class="editor-container">
+    <!-- Editor Header -->
+    <ion-card class="editor-header">
+      <ion-card-content>
+        <div class="editor-info">
+          <h2>Create New Blog Post</h2>
+          <p>Write engaging content for your audience</p>
+        </div>
+        <div class="editor-stats">
+          <ion-chip color="primary" size="small">
+            <ion-icon name="document-text" slot="start"></ion-icon>
+            Rich Text Editor
+          </ion-chip>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Editor Wrapper -->
+    <ion-card class="editor-card">
+      <ion-card-content>
+        <div class="NgxEditor__Wrapper">
+          <ngx-editor-menu
+            [editor]="editor"
+            [toolbar]="toolbar"
+            class="editor-toolbar"
+          >
+          </ngx-editor-menu>
+
+          <div class="editor-content">
+            <ngx-editor
+              [editor]="editor"
+              [(ngModel)]="html"
+              [disabled]="false"
+              [placeholder]="'Start writing your blog post here...'"
+              class="editor-textarea"
+            >
+            </ngx-editor>
+          </div>
+
+          <ngx-editor-floating-menu
+            [editor]="editor"
+            class="floating-menu"
+          ></ngx-editor-floating-menu>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Editor Footer -->
+    <ion-card class="editor-footer">
+      <ion-card-content>
+        <div class="footer-actions">
+          <div class="editor-tips">
+            <ion-icon name="bulb" color="warning"></ion-icon>
+            <span>Tip: Use H1 for your main title, H2-H6 for subheadings</span>
+          </div>
+          <div class="action-buttons">
+            <ion-button
+              (click)="clearEditor()"
+              fill="outline"
+              color="medium"
+              size="small"
+            >
+              <ion-icon name="refresh" slot="start"></ion-icon>
+              Clear
+            </ion-button>
+            <ion-button
+              (click)="previewBlog()"
+              fill="outline"
+              color="primary"
+              size="small"
+            >
+              <ion-icon name="eye" slot="start"></ion-icon>
+              Preview
+            </ion-button>
+            <ion-button
+              (click)="upload()"
+              fill="solid"
+              color="success"
+              size="small"
+            >
+              <ion-icon name="send" slot="start"></ion-icon>
+              Publish
+            </ion-button>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </div>
 </ion-content>

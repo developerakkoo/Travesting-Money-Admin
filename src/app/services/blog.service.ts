@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-const PROJECT_ID = 'travesting-3a43e';
-const API_KEY = 'AIzaSyBZlk1Mxmgc6dtQKvA0KUWZDJO8E3wr8ZM';
+const PROJECT_ID = 'travestingmoney-5d9f9';
+const API_KEY = 'AIzaSyCV8_CE8XH_OXyIhtUrejvvH4BRFmfpf9Y';
 
 const BASE_URL = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents`;
 @Injectable({

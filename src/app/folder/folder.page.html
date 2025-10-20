@@ -3,58 +3,426 @@
     <ion-buttons slot="start">
       <ion-menu-button></ion-menu-button>
     </ion-buttons>
-    <ion-title>Dashboard 📊</ion-title>
+    <ion-title>User Management Dashboard 📊</ion-title>
+    <ion-buttons slot="end">
+      <ion-button
+        fill="clear"
+        (click)="openStockRecommendationEditor()"
+        color="success"
+        title="Stock Recommendations"
+      >
+        <ion-icon name="trending-up" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
 <ion-content [fullscreen]="true">
+  <!-- Dashboard Stats -->
+  <ion-grid fixed>
+    <ion-row>
+      <ion-col size="3">
+        <ion-card>
+          <ion-card-header>
+            <ion-card-subtitle>Total Users</ion-card-subtitle>
+            <ion-card-title>{{totalUsers}}</ion-card-title>
+          </ion-card-header>
+        </ion-card>
+      </ion-col>
+      <ion-col size="3">
+        <ion-card>
+          <ion-card-header>
+            <ion-card-subtitle>Active Users</ion-card-subtitle>
+            <ion-card-title>{{activeUsers}}</ion-card-title>
+          </ion-card-header>
+        </ion-card>
+      </ion-col>
+      <ion-col size="3">
+        <ion-card>
+          <ion-card-header>
+            <ion-card-subtitle>Wealth Builder</ion-card-subtitle>
+            <ion-card-title>{{wealthBuilderUsers}}</ion-card-title>
+          </ion-card-header>
+        </ion-card>
+      </ion-col>
+      <ion-col size="3">
+        <ion-card>
+          <ion-card-header>
+            <ion-card-subtitle>Filtered Results</ion-card-subtitle>
+            <ion-card-title>{{filteredUsersCount}}</ion-card-title>
+          </ion-card-header>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
 
-<ion-grid fixed>
-  <ion-row>
-    <ion-col size="3">
-      <ion-card>
-        <ion-card-header>
-          <ion-card-subtitle>Total Visits Today</ion-card-subtitle>
-          <ion-card-title>100</ion-card-title>
-        </ion-card-header>
-        <ion-card-content>
-        </ion-card-content>
-      </ion-card>
-    </ion-col>
-    <ion-col size="3">
-      <ion-card>
-        <ion-card-header>
-          <ion-card-subtitle>Page Stay time</ion-card-subtitle>
-          <ion-card-title>15 min</ion-card-title>
-        </ion-card-header>
-        <ion-card-content>
-        </ion-card-content>
-      </ion-card>
-    </ion-col>
-    <ion-col size="3">
-      <ion-card>
-        <ion-card-header>
-          <ion-card-subtitle>Blog views Today</ion-card-subtitle>
-          <ion-card-title>1000</ion-card-title>
-        </ion-card-header>
-        <ion-card-content>
-        </ion-card-content>
-      </ion-card>
-    </ion-col>
-    <ion-col size="3">
-      <ion-card>
-        <ion-card-header>
-          <ion-card-subtitle>Subscriptions Clicks today</ion-card-subtitle>
-          <ion-card-title>10</ion-card-title>
-        </ion-card-header>
-        <ion-card-content>
-        </ion-card-content>
-      </ion-card>
-    </ion-col>
-  </ion-row>
-</ion-grid>
-  
-<ion-text color="primary">
-  <h1>This page is a dummy page.</h1>
-</ion-text>
+  <!-- Search and Filter Controls -->
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Search & Filter Users</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-grid>
+        <ion-row>
+          <ion-col size="12" size-md="4">
+            <ion-item>
+              <ion-label position="stacked">Search Users</ion-label>
+              <ion-input
+                [(ngModel)]="searchTerm"
+                (ionInput)="onSearchChange()"
+                placeholder="Search by name, email, or phone..."
+                clear-input
+              >
+              </ion-input>
+            </ion-item>
+          </ion-col>
+          <ion-col size="12" size-md="4">
+            <ion-item>
+              <ion-label position="stacked">Filter by Subscription</ion-label>
+              <ion-select
+                [(ngModel)]="filterBy"
+                (ionChange)="onFilterChange()"
+                placeholder="All Subscriptions"
+              >
+                <ion-select-option value="all">All Users</ion-select-option>
+                <ion-select-option value="wealth-builder"
+                  >Wealth Builder</ion-select-option
+                >
+                <ion-select-option value="premium">Premium</ion-select-option>
+                <ion-select-option value="basic">Basic</ion-select-option>
+              </ion-select>
+            </ion-item>
+          </ion-col>
+          <ion-col size="12" size-md="4">
+            <ion-item>
+              <ion-label position="stacked">Sort By</ion-label>
+              <ion-select
+                [(ngModel)]="sortBy"
+                (ionChange)="onSortChange()"
+                placeholder="Sort by"
+              >
+                <ion-select-option value="createdAt"
+                  >Created Date</ion-select-option
+                >
+                <ion-select-option value="name">Name</ion-select-option>
+                <ion-select-option value="email">Email</ion-select-option>
+                <ion-select-option value="lastLoginAt"
+                  >Last Login</ion-select-option
+                >
+              </ion-select>
+            </ion-item>
+          </ion-col>
+        </ion-row>
+        <ion-row>
+          <ion-col size="12">
+            <ion-button
+              fill="outline"
+              (click)="toggleSortDirection()"
+              color="primary"
+            >
+              <ion-icon name="swap-vertical" slot="start"></ion-icon>
+              {{sortDirection === 'asc' ? 'Ascending' : 'Descending'}}
+            </ion-button>
+            <ion-button fill="outline" (click)="loadUsers()" color="secondary">
+              <ion-icon name="refresh" slot="start"></ion-icon>
+              Refresh
+            </ion-button>
+            <ion-button
+              fill="solid"
+              (click)="openStockRecommendationEditor()"
+              color="success"
+            >
+              <ion-icon name="trending-up" slot="start"></ion-icon>
+              Stock Recommendations
+            </ion-button>
+            <ion-button
+              fill="outline"
+              (click)="openAllRecommendations()"
+              color="primary"
+            >
+              <ion-icon name="list" slot="start"></ion-icon>
+              View All Recommendations
+            </ion-button>
+            <ion-button
+              fill="outline"
+              (click)="openFirestoreTest()"
+              color="warning"
+            >
+              <ion-icon name="bug" slot="start"></ion-icon>
+              Test Firestore
+            </ion-button>
+            <ion-button
+              fill="outline"
+              (click)="testStockRecommendationForm()"
+              color="tertiary"
+            >
+              <ion-icon name="flask" slot="start"></ion-icon>
+              Test Form
+            </ion-button>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Users Table -->
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title
+        >Users List ({{filteredUsers.length}} users)</ion-card-title
+      >
+    </ion-card-header>
+    <ion-card-content>
+      <div class="table-container">
+        <table class="users-table">
+          <thead>
+            <tr>
+              <th>Sr. No</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Created At</th>
+              <th>Subscriptions</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let user of getPaginatedUsers(); let i = index">
+              <td>{{(currentPage - 1) * itemsPerPage + i + 1}}</td>
+              <td>
+                <div class="user-info">
+                  <strong>{{user.name}}</strong>
+                  <small>{{user.uid}}</small>
+                </div>
+              </td>
+              <td>{{user.email}}</td>
+              <td>{{user.phoneNumber}}</td>
+              <td>{{formatDate(user.createdAt)}}</td>
+              <td>
+                <div class="subscription-badges">
+                  <ion-chip
+                    *ngFor="let sub of user.purchasedSubscriptions"
+                    [color]="getSubscriptionBadgeColor(sub)"
+                    size="small"
+                    (click)="openSubscriptionRecommendations(user, sub)"
+                    class="clickable-chip"
+                  >
+                    {{sub}}
+                  </ion-chip>
+                  <span
+                    *ngIf="user.purchasedSubscriptions.length === 0"
+                    class="no-subscription"
+                  >
+                    No subscriptions
+                  </span>
+                </div>
+              </td>
+              <td>
+                <ion-badge [color]="user.isActive ? 'success' : 'danger'">
+                  {{user.isActive ? 'Active' : 'Inactive'}}
+                </ion-badge>
+              </td>
+              <td>
+                <div class="action-buttons">
+                  <ion-button
+                    fill="clear"
+                    size="small"
+                    color="primary"
+                    (click)="openStockRecommendationModal(user)"
+                    title="Send Stock Recommendation"
+                  >
+                    <ion-icon name="trending-up" slot="icon-only"></ion-icon>
+                  </ion-button>
+                  <ion-button
+                    fill="clear"
+                    size="small"
+                    color="success"
+                    (click)="openStockIdeaEditor(user)"
+                    title="Create Stock Idea"
+                  >
+                    <ion-icon name="analytics" slot="icon-only"></ion-icon>
+                  </ion-button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination-container" *ngIf="getTotalPages() > 1">
+        <ion-button
+          fill="outline"
+          size="small"
+          [disabled]="currentPage === 1"
+          (click)="goToPage(currentPage - 1)"
+        >
+          <ion-icon name="chevron-back" slot="icon-only"></ion-icon>
+        </ion-button>
+
+        <span class="page-info">
+          Page {{currentPage}} of {{getTotalPages()}}
+        </span>
+
+        <ion-button
+          fill="outline"
+          size="small"
+          [disabled]="currentPage === getTotalPages()"
+          (click)="goToPage(currentPage + 1)"
+        >
+          <ion-icon name="chevron-forward" slot="icon-only"></ion-icon>
+        </ion-button>
+      </div>
+
+      <!-- No users message -->
+      <div *ngIf="filteredUsers.length === 0" class="no-users">
+        <ion-icon name="people-outline" size="large"></ion-icon>
+        <h3>No users found</h3>
+        <p>Try adjusting your search or filter criteria</p>
+      </div>
+    </ion-card-content>
+  </ion-card>
 </ion-content>
+
+<!-- Subscription Recommendations Modal -->
+<ion-modal
+  [isOpen]="isSubscriptionModalOpen"
+  (didDismiss)="closeSubscriptionModal()"
+>
+  <ng-template>
+    <ion-header>
+      <ion-toolbar>
+        <ion-title
+          >{{selectedSubscription?.userName}} -
+          {{selectedSubscription?.subscription}} Recommendations</ion-title
+        >
+        <ion-buttons slot="end">
+          <ion-button (click)="closeSubscriptionModal()">
+            <ion-icon name="close"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+
+    <ion-content>
+      <div class="modal-content">
+        <!-- Summary Stats -->
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>Recommendation Summary</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <ion-grid>
+              <ion-row>
+                <ion-col size="4">
+                  <div class="stat-item">
+                    <div class="stat-number">
+                      {{subscriptionRecommendations.length}}
+                    </div>
+                    <div class="stat-label">Total</div>
+                  </div>
+                </ion-col>
+                <ion-col size="4">
+                  <div class="stat-item">
+                    <div class="stat-number">
+                      {{getRecommendationCount('BUY')}}
+                    </div>
+                    <div class="stat-label">Buy</div>
+                  </div>
+                </ion-col>
+                <ion-col size="4">
+                  <div class="stat-item">
+                    <div class="stat-number">
+                      {{getRecommendationCount('SELL')}}
+                    </div>
+                    <div class="stat-label">Sell</div>
+                  </div>
+                </ion-col>
+              </ion-row>
+            </ion-grid>
+          </ion-card-content>
+        </ion-card>
+
+        <!-- Recommendations Table -->
+        <ion-card>
+          <ion-card-header>
+            <ion-card-title>Stock Recommendations</ion-card-title>
+          </ion-card-header>
+          <ion-card-content>
+            <div class="table-container">
+              <table class="recommendations-table">
+                <thead>
+                  <tr>
+                    <th>Sr. No</th>
+                    <th>Stock Symbol</th>
+                    <th>Stock Name</th>
+                    <th>Recommendation</th>
+                    <th>Current Price</th>
+                    <th>Target Price</th>
+                    <th>Created At</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr
+                    *ngFor="let rec of subscriptionRecommendations; let i = index"
+                  >
+                    <td>{{i + 1}}</td>
+                    <td>
+                      <ion-chip size="small" color="primary"
+                        >{{rec.stockSymbol}}</ion-chip
+                      >
+                    </td>
+                    <td>{{rec.stockName}}</td>
+                    <td>
+                      <ion-badge
+                        [color]="rec.recommendation === 'BUY' ? 'success' : 'danger'"
+                      >
+                        {{rec.recommendation}}
+                      </ion-badge>
+                    </td>
+                    <td>₹{{rec.currentPrice}}</td>
+                    <td>₹{{rec.targetPrice}}</td>
+                    <td>{{formatDate(rec.createdAt)}}</td>
+                    <td>
+                      <ion-button
+                        fill="clear"
+                        size="small"
+                        color="danger"
+                        (click)="deleteRecommendation(rec)"
+                        title="Delete Recommendation"
+                      >
+                        <ion-icon name="trash" slot="icon-only"></ion-icon>
+                      </ion-button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+
+              <!-- Empty State -->
+              <div
+                class="empty-state"
+                *ngIf="subscriptionRecommendations.length === 0"
+              >
+                <ion-icon name="trending-up-outline"></ion-icon>
+                <h3>No Recommendations Yet</h3>
+                <p>
+                  No stock recommendations have been sent for this subscription.
+                </p>
+                <ion-button
+                  fill="outline"
+                  (click)="openStockRecommendationModal(selectedSubscription?.user!)"
+                  *ngIf="selectedSubscription?.user"
+                >
+                  <ion-icon name="add" slot="start"></ion-icon>
+                  Send First Recommendation
+                </ion-button>
+              </div>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </div>
+    </ion-content>
+  </ng-template>
+</ion-modal>

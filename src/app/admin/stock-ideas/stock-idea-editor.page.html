@@ -1,0 +1,565 @@
+<ion-header [translucent]="true" class="ion-no-border">
+  <ion-toolbar>
+    <ion-title>
+      <span>Stock – {{ currentIdea()?.term | uppercase }} term</span>
+      <ion-chip
+        *ngIf="isPublished()"
+        color="success"
+        size="small"
+        class="status-chip"
+      >
+        Published
+      </ion-chip>
+      <ion-chip
+        *ngIf="!isPublished()"
+        color="medium"
+        size="small"
+        class="status-chip"
+      >
+        Draft
+      </ion-chip>
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button *ngIf="currentIdea()?.postedAt" fill="clear" color="medium">
+        Posted: {{ currentIdea()?.postedAt | date:'dd MMM yy | hh:mm a' }}
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div class="editor-container">
+    <!-- Top Info Row -->
+    <ion-card class="info-card" *ngIf="currentIdea()">
+      <ion-card-content>
+        <ion-grid>
+          <ion-row>
+            <ion-col size="6">
+              <div class="info-item">
+                <span class="label">Returns so far:</span>
+                <span
+                  class="value"
+                  [class.positive]="returnsSoFar() && returnsSoFar()! > 0"
+                  [class.negative]="returnsSoFar() && returnsSoFar()! < 0"
+                >
+                  {{ returnsSoFar() ? (returnsSoFar()! > 0 ? '+' : '') +
+                  returnsSoFar()! + '%' : 'N/A' }}
+                </span>
+              </div>
+            </ion-col>
+            <ion-col size="6">
+              <div class="info-item">
+                <span class="label">Potential left:</span>
+                <span class="value"
+                  >{{ potentialLeft() ? potentialLeft()! + '%' : 'N/A' }}</span
+                >
+              </div>
+            </ion-col>
+          </ion-row>
+        </ion-grid>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Main Card -->
+    <ion-card class="main-card">
+      <ion-card-content>
+        <form [formGroup]="stockIdeaForm">
+          <!-- Stock Symbol Circle & Info -->
+          <div class="stock-header">
+            <div class="symbol-circle">
+              <ion-input
+                formControlName="symbol"
+                placeholder="SYMBOL"
+                class="symbol-input"
+                maxlength="10"
+              ></ion-input>
+            </div>
+            <div class="stock-info">
+              <ion-item class="stock-name-item">
+                <ion-input
+                  formControlName="stockName"
+                  placeholder="Stock Name"
+                  class="stock-name-input"
+                ></ion-input>
+              </ion-item>
+              <ion-item class="stock-exchange-item">
+                <ion-label position="stacked">Stock Exchange</ion-label>
+                <ion-select
+                  formControlName="stockExchange"
+                  placeholder="Select Exchange"
+                  class="stock-exchange-select"
+                >
+                  <ion-select-option value="NSE">NSE</ion-select-option>
+                  <ion-select-option value="BSE">BSE</ion-select-option>
+                </ion-select>
+              </ion-item>
+            </div>
+          </div>
+
+          <!-- Stock Image Upload Section - COMMENTED OUT -->
+          <!--
+          <div class="image-upload-section">
+            <div class="section-header">
+              <h3>Stock Image</h3>
+              <ion-button
+                fill="outline"
+                size="small"
+                (click)="triggerImageUpload()"
+                [disabled]="isUploadingImage"
+              >
+                <ion-icon name="camera" slot="start"></ion-icon>
+                {{ currentIdea()?.imageUrl ? 'Change Image' : 'Upload Image' }}
+              </ion-button>
+            </div>
+
+            <input
+              #imageFileInput
+              type="file"
+              accept="image/*"
+              style="display: none"
+              (change)="onImageFileSelected($event)"
+            />
+
+            <div class="image-preview-container">
+              <div
+                *ngIf="currentIdea()?.imageUrl; else noImageTemplate"
+                class="image-preview"
+              >
+                <img [src]="currentIdea()?.imageUrl" alt="Stock Image" />
+                <div class="image-actions">
+                  <ion-button
+                    fill="clear"
+                    size="small"
+                    color="danger"
+                    (click)="removeImage()"
+                  >
+                    <ion-icon name="trash" slot="icon-only"></ion-icon>
+                  </ion-button>
+                  <ion-button
+                    fill="clear"
+                    size="small"
+                    (click)="triggerImageUpload()"
+                    [disabled]="isUploadingImage"
+                  >
+                    <ion-icon name="camera" slot="icon-only"></ion-icon>
+                  </ion-button>
+                </div>
+              </div>
+
+              <ng-template #noImageTemplate>
+                <div class="no-image-placeholder">
+                  <ion-icon name="image-outline" size="large"></ion-icon>
+                  <p>No image uploaded</p>
+                  <p class="help-text">
+                    Click "Upload Image" to add a stock chart or company image
+                  </p>
+                </div>
+              </ng-template>
+            </div>
+
+            <div *ngIf="isUploadingImage" class="upload-progress">
+              <ion-progress-bar
+                [value]="imageUploadProgress"
+              ></ion-progress-bar>
+              <p class="progress-text">
+                Uploading image... {{ (imageUploadProgress * 100) |
+                number:'1.0-0' }}%
+              </p>
+            </div>
+          </div>
+          -->
+
+          <!-- Action Buttons -->
+          <div class="action-section">
+            <ion-segment formControlName="action" class="action-segment">
+              <ion-segment-button value="BUY" class="buy-btn">
+                <ion-label>Buy</ion-label>
+              </ion-segment-button>
+              <ion-segment-button value="SELL" class="sell-btn">
+                <ion-label>Sell</ion-label>
+              </ion-segment-button>
+            </ion-segment>
+            <ion-button
+              fill="clear"
+              size="small"
+              (click)="showInfoPopover($event, getBuySellInfo())"
+            >
+              <ion-icon name="information-circle" slot="icon-only"></ion-icon>
+            </ion-button>
+          </div>
+
+          <!-- Add Alert Button -->
+          <div class="alert-section">
+            <ion-button fill="outline" size="small" (click)="addAlert()">
+              <ion-icon name="notifications" slot="start"></ion-icon>
+              Add Alert
+            </ion-button>
+            <div
+              class="alerts-list"
+              *ngIf="stockIdeaForm.get('alerts')?.value?.length > 0"
+            >
+              <ion-chip
+                *ngFor="let alert of stockIdeaForm.get('alerts')?.value; let i = index"
+                color="warning"
+                size="small"
+                class="alert-chip"
+              >
+                {{ alert }}
+                <ion-icon name="close" (click)="removeAlert(i)"></ion-icon>
+              </ion-chip>
+            </div>
+          </div>
+
+          <!-- Date and Entry Fields -->
+          <div class="form-section">
+            <ion-item>
+              <ion-label position="stacked">Date</ion-label>
+              <ion-input type="date" formControlName="date"></ion-input>
+            </ion-item>
+
+            <ion-item>
+              <ion-label position="stacked">Entry Price</ion-label>
+              <ion-input
+                type="number"
+                formControlName="entryPrice"
+                placeholder="0.00"
+              ></ion-input>
+            </ion-item>
+
+            <ion-item>
+              <ion-label position="stacked">Entry Range Min</ion-label>
+              <ion-input
+                type="number"
+                formControlName="entryRangeMin"
+                placeholder="0.00"
+              ></ion-input>
+            </ion-item>
+
+            <ion-item>
+              <ion-label position="stacked">Entry Range Max</ion-label>
+              <ion-input
+                type="number"
+                formControlName="entryRangeMax"
+                placeholder="0.00"
+              ></ion-input>
+            </ion-item>
+          </div>
+
+          <!-- Dynamic Actions Section -->
+          <div class="actions-section">
+            <div class="section-header">
+              <h3>Actions</h3>
+              <ion-button
+                fill="outline"
+                size="small"
+                (click)="addActionFormGroup()"
+              >
+                <ion-icon name="add" slot="start"></ion-icon>
+                Add Action
+              </ion-button>
+            </div>
+
+            <div class="actions-list" formArrayName="actions">
+              <ion-card
+                *ngFor="let actionGroup of actionsArray.controls; let i = index"
+                class="action-card"
+                [formGroupName]="i"
+              >
+                <ion-card-content>
+                  <div class="action-header">
+                    <ion-select
+                      formControlName="type"
+                      placeholder="Action Type"
+                    >
+                      <ion-select-option value="AVERAGING"
+                        >Averaging</ion-select-option
+                      >
+                      <ion-select-option value="PARTIAL_BOOKING"
+                        >Partial Booking</ion-select-option
+                      >
+                    </ion-select>
+                    <ion-button
+                      fill="clear"
+                      size="small"
+                      (click)="showInfoPopover($event, actionGroup.get('type')?.value === 'AVERAGING' ? getAveragingInfo() : getPartialBookingInfo())"
+                    >
+                      <ion-icon
+                        name="information-circle"
+                        slot="icon-only"
+                      ></ion-icon>
+                    </ion-button>
+                    <ion-button
+                      fill="clear"
+                      color="danger"
+                      size="small"
+                      (click)="removeAction(i)"
+                    >
+                      <ion-icon name="trash" slot="icon-only"></ion-icon>
+                    </ion-button>
+                  </div>
+
+                  <div class="action-fields">
+                    <ion-item>
+                      <ion-label position="stacked">Date</ion-label>
+                      <ion-input type="date" formControlName="date"></ion-input>
+                    </ion-item>
+
+                    <ion-item>
+                      <ion-label position="stacked">Entry Price</ion-label>
+                      <ion-input
+                        type="number"
+                        formControlName="entryPrice"
+                        placeholder="0.00"
+                      ></ion-input>
+                    </ion-item>
+
+                    <ion-item>
+                      <ion-label position="stacked">Entry Range Min</ion-label>
+                      <ion-input
+                        type="number"
+                        formControlName="entryRangeMin"
+                        placeholder="0.00"
+                      ></ion-input>
+                    </ion-item>
+
+                    <ion-item>
+                      <ion-label position="stacked">Entry Range Max</ion-label>
+                      <ion-input
+                        type="number"
+                        formControlName="entryRangeMax"
+                        placeholder="0.00"
+                      ></ion-input>
+                    </ion-item>
+
+                    <ion-item>
+                      <ion-label position="stacked">Note (Optional)</ion-label>
+                      <ion-input
+                        formControlName="note"
+                        placeholder="Add a note..."
+                      ></ion-input>
+                    </ion-item>
+                  </div>
+                </ion-card-content>
+              </ion-card>
+            </div>
+          </div>
+
+          <!-- Stoploss, Target, Duration -->
+          <div class="targets-section">
+            <ion-grid>
+              <ion-row>
+                <ion-col size="4">
+                  <ion-item>
+                    <ion-label position="stacked">Stoploss</ion-label>
+                    <ion-input
+                      type="number"
+                      formControlName="stoploss"
+                      placeholder="0.00"
+                    ></ion-input>
+                    <ion-button
+                      fill="clear"
+                      size="small"
+                      slot="end"
+                      (click)="showInfoPopover($event, getStoplossInfo())"
+                    >
+                      <ion-icon
+                        name="information-circle"
+                        slot="icon-only"
+                      ></ion-icon>
+                    </ion-button>
+                    <ion-chip
+                      *ngIf="modifiedFlags().stoplossChanged"
+                      color="warning"
+                      size="small"
+                      slot="end"
+                    >
+                      Modified
+                    </ion-chip>
+                  </ion-item>
+                </ion-col>
+                <ion-col size="4">
+                  <ion-item>
+                    <ion-label position="stacked">Potential %</ion-label>
+                    <ion-input
+                      type="number"
+                      formControlName="potentialLeftPct"
+                      placeholder="25"
+                      step="0.1"
+                    ></ion-input>
+                    <ion-text slot="end" class="percentage-symbol">%</ion-text>
+                    <ion-button
+                      fill="clear"
+                      size="small"
+                      slot="end"
+                      (click)="showInfoPopover($event, getTargetInfo())"
+                    >
+                      <ion-icon
+                        name="information-circle"
+                        slot="icon-only"
+                      ></ion-icon>
+                    </ion-button>
+                    <ion-chip
+                      *ngIf="modifiedFlags().targetPriceChanged"
+                      color="warning"
+                      size="small"
+                      slot="end"
+                    >
+                      Modified
+                    </ion-chip>
+                  </ion-item>
+                </ion-col>
+                <ion-col size="4">
+                  <ion-item>
+                    <ion-label position="stacked">Duration</ion-label>
+                    <ion-input
+                      formControlName="durationText"
+                      placeholder="e.g., 1-3 months"
+                    ></ion-input>
+                    <ion-button
+                      fill="clear"
+                      size="small"
+                      slot="end"
+                      (click)="showInfoPopover($event, getDurationInfo())"
+                    >
+                      <ion-icon
+                        name="information-circle"
+                        slot="icon-only"
+                      ></ion-icon>
+                    </ion-button>
+                    <ion-chip
+                      *ngIf="modifiedFlags().durationChanged"
+                      color="warning"
+                      size="small"
+                      slot="end"
+                    >
+                      Modified
+                    </ion-chip>
+                  </ion-item>
+                </ion-col>
+              </ion-row>
+            </ion-grid>
+          </div>
+
+          <!-- Warning Line -->
+          <div class="warning-section" *ngIf="isOutsideBuyZone()">
+            <ion-chip color="warning" class="warning-chip">
+              <ion-icon name="warning" slot="start"></ion-icon>
+              Outside Buy Zone — Be Cautious
+            </ion-chip>
+          </div>
+
+          <!-- Recent Trade Updates -->
+          <div
+            class="recent-updates-section"
+            *ngIf="recentUpdates().length > 0"
+          >
+            <h3>Recent Trade Updates</h3>
+            <div class="updates-list">
+              <ion-chip
+                *ngFor="let update of recentUpdates() | recentTradeUpdates"
+                color="primary"
+                size="small"
+                class="update-chip"
+              >
+                {{ update }}
+              </ion-chip>
+            </div>
+          </div>
+        </form>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Footer Buttons -->
+    <ion-card class="footer-card">
+      <ion-card-content>
+        <div class="footer-buttons">
+          <ion-button fill="outline" (click)="saveDraft()">
+            <ion-icon name="save" slot="start"></ion-icon>
+            Save Draft
+          </ion-button>
+          <ion-button
+            fill="solid"
+            color="success"
+            [disabled]="isPublished()"
+            (click)="publish()"
+          >
+            <ion-icon name="send" slot="start"></ion-icon>
+            Publish
+          </ion-button>
+          <ion-button
+            fill="solid"
+            color="primary"
+            [disabled]="!isPublished()"
+            (click)="update()"
+          >
+            <ion-icon name="refresh" slot="start"></ion-icon>
+            Update
+          </ion-button>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Bottom Action Buttons -->
+    <ion-card class="bottom-actions-card">
+      <ion-card-content>
+        <div class="bottom-actions">
+          <ion-button fill="outline" color="primary" size="large">
+            <ion-icon name="document-text" slot="start"></ion-icon>
+            About Trade
+            <ion-button fill="clear" size="small" slot="end">
+              <ion-icon name="information-circle" slot="icon-only"></ion-icon>
+            </ion-button>
+          </ion-button>
+          <!-- Research Report Upload Section - COMMENTED OUT -->
+          <!--
+          <ion-button
+            fill="outline"
+            color="secondary"
+            size="large"
+            (click)="triggerResearchReportUpload()"
+            [disabled]="isUploadingReport"
+          >
+            <ion-icon name="analytics" slot="start"></ion-icon>
+            {{ currentIdea()?.researchReportUrl ? 'Update Research Report' :
+            'Upload Research Report' }}
+            <ion-button fill="clear" size="small" slot="end">
+              <ion-icon name="information-circle" slot="icon-only"></ion-icon>
+            </ion-button>
+          </ion-button>
+
+          <input
+            #reportFileInput
+            type="file"
+            accept=".pdf,.doc,.docx,.xls,.xlsx,.txt"
+            style="display: none"
+            (change)="onResearchReportFileSelected($event)"
+          />
+
+          <div *ngIf="currentIdea()?.researchReportUrl" class="report-info">
+            <ion-chip color="success" size="small">
+              <ion-icon name="document" slot="start"></ion-icon>
+              Research Report Uploaded
+            </ion-chip>
+            <ion-button
+              fill="clear"
+              size="small"
+              color="danger"
+              (click)="removeResearchReport()"
+            >
+              <ion-icon name="trash" slot="icon-only"></ion-icon>
+            </ion-button>
+          </div>
+
+          <div *ngIf="isUploadingReport" class="upload-progress">
+            <ion-progress-bar [value]="reportUploadProgress"></ion-progress-bar>
+            <p class="progress-text">
+              Uploading research report... {{ (reportUploadProgress * 100) |
+              number:'1.0-0' }}%
+            </p>
+          </div>
+          -->
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </div>
+</ion-content>

@@ -1,0 +1,242 @@
+<ion-header [translucent]="true" class="ion-no-border">
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/folder/dashboard"></ion-back-button>
+    </ion-buttons>
+    <ion-title>Portfolio 📊</ion-title>
+    <ion-buttons slot="end">
+      <ion-button fill="clear" (click)="addHolding()" color="success">
+        <ion-icon name="add" slot="icon-only"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <!-- Summary Stats -->
+  <ion-grid fixed>
+    <ion-row>
+      <ion-col size="12" size-md="6">
+        <ion-card class="stat-card">
+          <ion-card-content>
+            <div class="stat-content">
+              <div class="stat-icon">
+                <ion-icon name="trending-up" color="primary"></ion-icon>
+              </div>
+              <div class="stat-info">
+                <div class="stat-number">{{getTotalHoldings()}}</div>
+                <div class="stat-label">Total Holdings</div>
+              </div>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+      <ion-col size="12" size-md="6">
+        <ion-card class="stat-card">
+          <ion-card-content>
+            <div class="stat-content">
+              <div class="stat-icon">
+                <ion-icon name="pie-chart" color="success"></ion-icon>
+              </div>
+              <div class="stat-info">
+                <div class="stat-number">
+                  {{getTotalPercentage() | number:'1.1-1'}}%
+                </div>
+                <div class="stat-label">Total Allocation</div>
+              </div>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+
+  <!-- Charts Section -->
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Portfolio Analytics 📊</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-grid>
+        <ion-row>
+          <!-- Sector-wise Allocation Chart -->
+          <ion-col size="12" size-md="4">
+            <div class="chart-container">
+              <h3>Sector-wise Allocation</h3>
+              <div class="chart-wrapper">
+                <canvas #sectorChart height="300"></canvas>
+              </div>
+            </div>
+          </ion-col>
+
+          <!-- Market Capitalization Chart -->
+          <ion-col size="12" size-md="4">
+            <div class="chart-container">
+              <h3>Market Capitalization</h3>
+              <div class="chart-wrapper">
+                <canvas #marketCapChart height="300"></canvas>
+              </div>
+            </div>
+          </ion-col>
+
+          <!-- Asset Allocation Chart -->
+          <ion-col size="12" size-md="4">
+            <div class="chart-container">
+              <h3>Asset Allocation</h3>
+              <div class="chart-wrapper">
+                <canvas #assetChart height="300"></canvas>
+              </div>
+            </div>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Search and Filters -->
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>Search & Filter Holdings</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <ion-grid>
+        <ion-row>
+          <ion-col size="12" size-md="8">
+            <ion-searchbar
+              [(ngModel)]="searchTerm"
+              (ionInput)="onSearchChange()"
+              placeholder="Search by name, sector, or instrument..."
+              show-clear-button="focus"
+            ></ion-searchbar>
+          </ion-col>
+          <ion-col size="12" size-md="4">
+            <ion-button fill="outline" (click)="clearFilters()" color="medium">
+              <ion-icon name="refresh" slot="start"></ion-icon>
+              Clear Filters
+            </ion-button>
+            <ion-button fill="solid" (click)="addHolding()" color="success">
+              <ion-icon name="add" slot="start"></ion-icon>
+              Add Holding
+            </ion-button>
+            <ion-button
+              fill="outline"
+              (click)="bulkImportHoldings()"
+              color="warning"
+            >
+              <ion-icon name="download" slot="start"></ion-icon>
+              Bulk Import
+            </ion-button>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+    </ion-card-content>
+  </ion-card>
+
+  <!-- Holdings Table -->
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>
+        Holdings ({{filteredHoldings.length}} found)
+      </ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+      <div class="table-container">
+        <table class="holdings-table">
+          <thead>
+            <tr>
+              <th>Sr. No</th>
+              <th>Name</th>
+              <th>Sector</th>
+              <th>Instrument</th>
+              <th>% of Holdings</th>
+              <th>Created At</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let holding of getPaginatedHoldings(); let i = index">
+              <td>{{(currentPage - 1) * itemsPerPage + i + 1}}</td>
+              <td>
+                <div class="holding-name">{{holding.name}}</div>
+              </td>
+              <td>
+                <ion-chip size="small" color="primary"
+                  >{{holding.sector}}</ion-chip
+                >
+              </td>
+              <td>
+                <ion-chip size="small" color="secondary"
+                  >{{holding.instrument}}</ion-chip
+                >
+              </td>
+              <td>
+                <div class="percentage-display">
+                  <ion-badge
+                    [color]="holding.percentageOfHoldings > 10 ? 'success' : 'warning'"
+                  >
+                    {{holding.percentageOfHoldings | number:'1.1-1'}}%
+                  </ion-badge>
+                </div>
+              </td>
+              <td>{{formatDate(holding.createdAt)}}</td>
+              <td>
+                <ion-button
+                  fill="clear"
+                  size="small"
+                  color="primary"
+                  (click)="editHolding(holding)"
+                  title="Edit Holding"
+                >
+                  <ion-icon name="create" slot="icon-only"></ion-icon>
+                </ion-button>
+                <ion-button
+                  fill="clear"
+                  size="small"
+                  color="danger"
+                  (click)="deleteHolding(holding)"
+                  title="Delete Holding"
+                >
+                  <ion-icon name="trash" slot="icon-only"></ion-icon>
+                </ion-button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Empty State -->
+        <div class="empty-state" *ngIf="filteredHoldings.length === 0">
+          <ion-icon name="pie-chart-outline"></ion-icon>
+          <h3>No Holdings Found</h3>
+          <p>Try adjusting your search criteria or add your first holding</p>
+          <ion-button fill="outline" (click)="addHolding()">
+            <ion-icon name="add" slot="start"></ion-icon>
+            Add First Holding
+          </ion-button>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination-container" *ngIf="getTotalPages() > 1">
+        <ion-button
+          fill="clear"
+          (click)="goToPage(currentPage - 1)"
+          [disabled]="currentPage === 1"
+        >
+          <ion-icon name="chevron-back" slot="icon-only"></ion-icon>
+        </ion-button>
+
+        <span class="page-info">
+          Page {{currentPage}} of {{getTotalPages()}}
+        </span>
+
+        <ion-button
+          fill="clear"
+          (click)="goToPage(currentPage + 1)"
+          [disabled]="currentPage === getTotalPages()"
+        >
+          <ion-icon name="chevron-forward" slot="icon-only"></ion-icon>
+        </ion-button>
+      </div>
+    </ion-card-content>
+  </ion-card>
+</ion-content>

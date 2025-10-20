@@ -1,0 +1,96 @@
+.contact-message {
+  font-size: 0.9em;
+  color: var(--ion-color-medium);
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+.status-chip {
+  margin-top: 4px;
+  font-size: 0.8em;
+}
+
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  text-align: center;
+  color: var(--ion-color-medium);
+}
+
+.empty-state ion-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+}
+
+.empty-state h2 {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.5rem;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 1rem;
+}
+
+ion-item {
+  --padding-start: 16px;
+  --padding-end: 16px;
+}
+
+ion-item-sliding {
+  margin-bottom: 8px;
+}
+
+ion-segment {
+  --background: var(--ion-color-light);
+}
+
+ion-segment-button {
+  --color: var(--ion-color-medium);
+  --color-checked: var(--ion-color-primary);
+  --background-checked: var(--ion-color-primary-tint);
+}
+
+ion-card {
+  margin: 16px;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+ion-card-header {
+  padding-bottom: 8px;
+}
+
+ion-card-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+ion-list {
+  padding: 0 16px;
+}
+
+ion-item-option {
+  --background: transparent;
+}
+
+ion-item-option[color="primary"] {
+  --color: var(--ion-color-primary);
+}
+
+.delete-btn {
+  margin-left: 8px;
+  --padding-start: 8px;
+  --padding-end: 8px;
+}
+
+.contact-date {
+  font-size: 0.8em;
+  color: var(--ion-color-medium);
+  text-align: right;
+  margin-bottom: 4px;
+}

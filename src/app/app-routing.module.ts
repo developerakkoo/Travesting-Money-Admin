@@ -5,34 +5,65 @@ const routes: Routes = [
   {
     path: 'dash',
     redirectTo: 'folder/dashboard',
-    pathMatch: 'full'
+    pathMatch: 'full',
   },
   {
     path: 'folder/:id',
-    loadChildren: () => import('./folder/folder.module').then( m => m.FolderPageModule)
+    loadChildren: () =>
+      import('./folder/folder.module').then((m) => m.FolderPageModule),
   },
   {
     path: 'blog-editor',
-    loadChildren: () => import('./blog-editor/blog-editor.module').then( m => m.BlogEditorPageModule)
+    loadChildren: () =>
+      import('./blog-editor/blog-editor.module').then(
+        (m) => m.BlogEditorPageModule
+      ),
   },
   {
     path: '',
-    loadChildren: () => import('./login/login.module').then( m => m.LoginPageModule)
+    loadChildren: () =>
+      import('./login/login.module').then((m) => m.LoginPageModule),
   },
   {
     path: 'blogs',
-    loadChildren: () => import('./blogs/blogs.module').then( m => m.BlogsPageModule)
+    loadChildren: () =>
+      import('./blogs/blogs.module').then((m) => m.BlogsPageModule),
   },
   {
     path: 'update-blog/:id',
-    loadChildren: () => import('./update-blog/update-blog.module').then( m => m.UpdateBlogPageModule)
-  }
+    loadChildren: () =>
+      import('./update-blog/update-blog.module').then(
+        (m) => m.UpdateBlogPageModule
+      ),
+  },
+  {
+    path: 'admin',
+    loadChildren: () =>
+      import('./admin/admin.module').then((m) => m.AdminModule),
+  },
+  {
+    path: 'recommendations',
+    loadChildren: () =>
+      import('./recommendations/recommendations.module').then(
+        (m) => m.RecommendationsPageModule
+      ),
+  },
+  {
+    path: 'portfolio',
+    loadChildren: () =>
+      import('./portfolio/portfolio.module').then((m) => m.PortfolioPageModule),
+  },
+  {
+    path: 'contacts',
+    loadChildren: () =>
+      import('./contacts/contacts.module').then((m) => m.ContactsPageModule),
+  },
 ];
 
 @NgModule({
   imports: [
-    RouterModule.forRoot(routes, { preloadingStrategy: PreloadAllModules })
+    RouterModule.forRoot(routes, { preloadingStrategy: PreloadAllModules }),
   ],
-  exports: [RouterModule]
+  exports: [RouterModule],
 })
 export class AppRoutingModule {}

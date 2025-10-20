@@ -10,7 +10,9 @@ export class AppComponent {
     { title: 'Dashboard', url: '/folder/dashboard', icon: 'analytics' },
     { title: 'Blogs', url: '/blogs', icon: 'document' },
     { title: 'Subscriptions', url: '/folder/favorites', icon: 'card' },
-    { title: 'Courses', url: '/folder/archived', icon: 'people' },
+    // { title: 'Courses', url: '/folder/archived', icon: 'people' },
+    { title: 'Portfolio', url: '/portfolio', icon: 'pie-chart' },
+    { title: 'Contacts', url: '/contacts', icon: 'people' },
   ];
   constructor() {}
 }

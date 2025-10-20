@@ -4,15 +4,16 @@
 
 export const environment = {
   production: false,
-   firebaseConfig : {
-  apiKey: "AIzaSyBZlk1Mxmgc6dtQKvA0KUWZDJO8E3wr8ZM",
-  authDomain: "travesting-3a43e.firebaseapp.com",
-  projectId: "travesting-3a43e",
-  storageBucket: "travesting-3a43e.firebasestorage.app",
-  messagingSenderId: "635256034750",
-  appId: "1:635256034750:web:81111c90efca12d207d5ef",
-  measurementId: "G-K7TX5Q00FM"
-},
+  firebaseConfig: {
+    apiKey: "AIzaSyCV8_CE8XH_OXyIhtUrejvvH4BRFmfpf9Y",
+    authDomain: "travestingmoney-5d9f9.firebaseapp.com",
+    databaseURL: "https://travestingmoney-5d9f9-default-rtdb.firebaseio.com",
+    projectId: "travestingmoney-5d9f9",
+    storageBucket: "travestingmoney-5d9f9.firebasestorage.app",
+    messagingSenderId: "896872312270",
+    appId: "1:896872312270:web:a4cf48dd0ab92b5b334f9f",
+    measurementId: "G-8TV16RW7B3"
+  },
 };
 
 /*

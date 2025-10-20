@@ -1,0 +1,284 @@
+// Recommendations page styling
+.stat-card {
+  margin-bottom: 16px;
+  
+  .stat-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    
+    .stat-icon {
+      font-size: 2.5rem;
+      opacity: 0.8;
+    }
+    
+    .stat-info {
+      flex: 1;
+      
+      .stat-number {
+        font-size: 2rem;
+        font-weight: bold;
+        color: var(--ion-color-primary);
+        margin-bottom: 4px;
+      }
+      
+      .stat-label {
+        font-size: 0.9rem;
+        color: var(--ion-color-medium);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+    }
+  }
+}
+
+// Table styling
+.table-container {
+  overflow-x: auto;
+  margin-top: 16px;
+}
+
+.recommendations-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 800px;
+
+  th {
+    background: var(--ion-color-light);
+    padding: 12px 8px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--ion-color-dark);
+    border-bottom: 2px solid var(--ion-color-light-shade);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 12px 8px;
+    border-bottom: 1px solid var(--ion-color-light-shade);
+    font-size: 0.9rem;
+    vertical-align: middle;
+
+    &:first-child {
+      font-weight: 600;
+      color: var(--ion-color-medium);
+    }
+  }
+
+  tr:hover {
+    background: rgba(var(--ion-color-primary-rgb), 0.05);
+  }
+
+  .user-info {
+    .user-name {
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    
+    .user-subscriptions {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+      
+      ion-chip {
+        font-size: 0.7rem;
+        height: 20px;
+        margin: 0;
+      }
+    }
+  }
+
+  ion-chip {
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  ion-badge {
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+
+  ion-button {
+    --border-radius: 6px;
+    --padding-start: 8px;
+    --padding-end: 8px;
+    height: 32px;
+    width: 32px;
+
+    &:hover {
+      --background: rgba(var(--ion-color-danger-rgb), 0.1);
+    }
+  }
+}
+
+// Empty state
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--ion-color-medium);
+
+  ion-icon {
+    font-size: 4rem;
+    margin-bottom: 16px;
+    opacity: 0.5;
+  }
+
+  h3 {
+    margin: 0 0 8px 0;
+    font-weight: 500;
+    color: var(--ion-color-dark);
+  }
+
+  p {
+    margin: 0 0 20px 0;
+    font-size: 0.9rem;
+  }
+
+  ion-button {
+    --border-radius: 8px;
+  }
+}
+
+// Pagination
+.pagination-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-top: 20px;
+  padding: 16px;
+
+  .page-info {
+    font-weight: 500;
+    color: var(--ion-color-medium);
+    font-size: 0.9rem;
+  }
+}
+
+// Subscription badge colors
+// Note: getSubscriptionBadgeColor method is defined in the TypeScript component
+
+// Action buttons in table
+.action-buttons {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+// Edit modal styling
+.edit-form {
+  ion-card {
+    margin-bottom: 20px;
+  }
+}
+
+.section-header-with-button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: 12px;
+
+  ion-card-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    flex: 1;
+  }
+
+  ion-button {
+    flex-shrink: 0;
+  }
+}
+
+.action-item-card {
+  border: 1px solid var(--ion-color-light-shade);
+  margin-bottom: 12px;
+
+  .action-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+
+    ion-select {
+      flex: 1;
+    }
+  }
+}
+
+.empty-state-small {
+  text-align: center;
+  padding: 20px;
+  color: var(--ion-color-medium);
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 20px 0;
+  margin-top: 20px;
+  border-top: 1px solid var(--ion-color-light-shade);
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .section-header-with-button {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+
+    ion-button {
+      width: 100%;
+    }
+  }
+
+  .stat-card .stat-content {
+    flex-direction: column;
+    text-align: center;
+    gap: 8px;
+    
+    .stat-icon {
+      font-size: 2rem;
+    }
+    
+    .stat-info .stat-number {
+      font-size: 1.5rem;
+    }
+  }
+
+  .recommendations-table {
+    font-size: 0.8rem;
+    min-width: 600px;
+
+    th, td {
+      padding: 8px 4px;
+    }
+
+    th {
+      font-size: 0.75rem;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .recommendations-table {
+    th, td {
+      padding: 6px 2px;
+      font-size: 0.75rem;
+    }
+
+    // Hide some columns on very small screens
+    th:nth-child(2),
+    td:nth-child(2),
+    th:nth-child(4),
+    td:nth-child(4) {
+      display: none;
+    }
+  }
+}
