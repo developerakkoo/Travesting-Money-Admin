@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { Router } from '@angular/router';
 import { take } from 'rxjs/operators';
 import {
@@ -6,6 +6,7 @@ import {
   LoadingController,
   ToastController,
   ModalController,
+  IonInput,
 } from '@ionic/angular';
 import {
   UserService,
@@ -13,6 +14,7 @@ import {
   StockRecommendation,
   TradeAction,
 } from '../services/user.service';
+import { StorageService } from '../services/storage.service';
 
 @Component({
   selector: 'app-recommendations',
@@ -40,8 +42,15 @@ export class RecommendationsPage implements OnInit {
   selectedRecommendation: StockRecommendation | null = null;
   editedRecommendation: Partial<StockRecommendation> = {};
 
+  // File upload
+  @ViewChild('reportFileInput') reportFileInput!: ElementRef<HTMLInputElement>;
+  isUploadingReport = false;
+  @ViewChild('exitDateInput', { read: IonInput }) exitDateInput?: IonInput;
+  @ViewChild('exitTimeInput', { read: IonInput }) exitTimeInput?: IonInput;
+
   constructor(
     private userService: UserService,
+    private storageService: StorageService,
     private alertController: AlertController,
     private loadingController: LoadingController,
     private toastController: ToastController,
@@ -174,15 +183,15 @@ export class RecommendationsPage implements OnInit {
 
   async deleteRecommendation(recommendation: StockRecommendation) {
     const alert = await this.alertController.create({
-      header: 'Delete Recommendation',
-      message: `Are you sure you want to delete the ${recommendation.recommendation} recommendation for ${recommendation.stockSymbol}?`,
+      header: 'Permanently Delete Recommendation',
+      message: `⚠️ WARNING: This will permanently delete the ${recommendation.recommendation} recommendation for ${recommendation.stockSymbol} from the database. This action cannot be undone.`,
       buttons: [
         {
           text: 'Cancel',
           role: 'cancel',
         },
         {
-          text: 'Delete',
+          text: 'Permanently Delete',
           role: 'destructive',
           handler: () => {
             this.performDeleteRecommendation(recommendation);
@@ -193,6 +202,152 @@ export class RecommendationsPage implements OnInit {
 
     await alert.present();
   }
+
+
+  async performMarkAsDeletedRecommendation(recommendation: StockRecommendation) {
+    const alert = await this.alertController.create({
+      header: 'Hide Recommendation',
+      message: `Please confirm the exit details for the ${recommendation.recommendation} recommendation on ${recommendation.stockSymbol}. These will be saved before the idea is hidden from the admin view.`,
+      inputs: [
+        {
+          name: 'exitPrice',
+          type: 'number',
+          min: 0,
+          placeholder: 'Exit Price (e.g., 1250)',
+          value:
+            recommendation.exitPrice !== undefined &&
+            recommendation.exitPrice !== null
+              ? String(recommendation.exitPrice)
+              : '',
+        },
+        {
+          name: 'exitDate',
+          type: 'date',
+          value: recommendation.exitDate || '',
+        },
+        {
+          name: 'exitTime',
+          type: 'time',
+          value: recommendation.exitTime || '',
+        },
+        {
+          name: 'profitEarned',
+          type: 'text',
+          placeholder: 'Profit Earned (e.g., +12% in 10 days)',
+          value:
+            recommendation.profitEarned !== undefined &&
+            recommendation.profitEarned !== null
+              ? String(recommendation.profitEarned)
+              : '',
+        },
+      ],
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel',
+        },
+        {
+          text: 'Hide',
+          handler: (data) => {
+            const exitPrice =
+              data.exitPrice !== undefined && data.exitPrice !== null
+                ? parseFloat(data.exitPrice)
+                : NaN;
+            const exitDate = data.exitDate;
+            const exitTime = data.exitTime;
+            const profitEarnedInput =
+              data.profitEarned !== undefined && data.profitEarned !== null
+                ? data.profitEarned.trim()
+                : undefined;
+
+            if (!data.exitPrice || isNaN(exitPrice) || exitPrice <= 0) {
+              this.presentToast(
+                'Please provide a valid exit price before hiding the recommendation.',
+                'warning'
+              );
+              return false;
+            }
+
+            if (!exitDate) {
+              this.presentToast(
+                'Please provide the exit date before hiding the recommendation.',
+                'warning'
+              );
+              return false;
+            }
+
+            if (!exitTime) {
+              this.presentToast(
+                'Please provide the exit time before hiding the recommendation.',
+                'warning'
+              );
+              return false;
+            }
+
+            this.performMarkAsDeleted(recommendation, {
+              exitPrice,
+              exitDate,
+              exitTime,
+              profitEarned:
+                profitEarnedInput && profitEarnedInput.length > 0
+                  ? profitEarnedInput
+                  : undefined,
+            });
+            return true;
+          },
+        },
+      ],
+    });
+
+    await alert.present();
+  }
+
+  private async performMarkAsDeleted(
+    recommendation: StockRecommendation,
+    exitDetails: {
+      exitPrice: number;
+      exitDate: string;
+      exitTime: string;
+      profitEarned?: string;
+    }
+  ) {
+    const loading = await this.loadingController.create({
+      message: 'Hiding recommendation...',
+    });
+    await loading.present();
+    try {
+      await this.userService.markStockRecommendationForDeletion(
+        recommendation.id!,
+        exitDetails
+      );
+
+      recommendation.exitPrice = exitDetails.exitPrice;
+      recommendation.exitDate = exitDetails.exitDate;
+      recommendation.exitTime = exitDetails.exitTime;
+      if (exitDetails.profitEarned !== undefined) {
+        recommendation.profitEarned = exitDetails.profitEarned;
+      }
+
+      if (this.selectedRecommendation?.id === recommendation.id) {
+        this.closeEditModal();
+      }
+
+      // Remove from local arrays
+      this.allRecommendations = this.allRecommendations.filter(
+        (rec) => rec.id !== recommendation.id
+      );
+      this.filteredRecommendations = this.filteredRecommendations.filter(
+        (rec) => rec.id !== recommendation.id
+      );
+
+      await loading.dismiss();
+      await this.presentToast('Recommendation hidden successfully', 'success');
+    } catch (error) {
+      console.error('Error marking recommendation for deletion:', error);
+      await loading.dismiss();
+      await this.presentToast('Failed to hide recommendation', 'danger');
+    }
+  } 
 
   private async performDeleteRecommendation(
     recommendation: StockRecommendation
@@ -280,6 +435,11 @@ export class RecommendationsPage implements OnInit {
       ...recommendation,
       actions: [...(recommendation.actions || [])],
       alerts: [...(recommendation.alerts || [])],
+      researchReportUrl: recommendation.researchReportUrl, // Explicitly copy researchReportUrl
+      // Ensure profitEarned is always a string (handle legacy data that might be number)
+      profitEarned: recommendation.profitEarned !== undefined && recommendation.profitEarned !== null 
+        ? String(recommendation.profitEarned) 
+        : '',
     };
     this.isEditModalOpen = true;
   }
@@ -288,6 +448,32 @@ export class RecommendationsPage implements OnInit {
     this.isEditModalOpen = false;
     this.selectedRecommendation = null;
     this.editedRecommendation = {};
+  }
+
+  async openExitDatePicker() {
+    await this.triggerNativePicker(this.exitDateInput);
+  }
+
+  async openExitTimePicker() {
+    await this.triggerNativePicker(this.exitTimeInput);
+  }
+
+  private async triggerNativePicker(input?: IonInput) {
+    if (!input) {
+      return;
+    }
+
+    const nativeInput = await input.getInputElement();
+    if (!nativeInput) {
+      return;
+    }
+
+    const picker = (nativeInput as any).showPicker;
+    if (typeof picker === 'function') {
+      picker.call(nativeInput);
+    } else {
+      nativeInput.click();
+    }
   }
 
   async updateRecommendation() {
@@ -302,29 +488,44 @@ export class RecommendationsPage implements OnInit {
     await loading.present();
 
     try {
-      // Prepare the update data
-      const updateData: Partial<StockRecommendation> = {
-        stockSymbol: this.editedRecommendation.stockSymbol,
-        stockName: this.editedRecommendation.stockName,
-        stockExchange: this.editedRecommendation.stockExchange,
-        term: this.editedRecommendation.term,
-        recommendation: this.editedRecommendation.recommendation,
-        cmp: this.editedRecommendation.cmp,
-        changePct: this.editedRecommendation.changePct,
-        date: this.editedRecommendation.date,
-        currentPrice: this.editedRecommendation.currentPrice,
-        targetPrice: this.editedRecommendation.targetPrice,
-        entryPrice: this.editedRecommendation.entryPrice,
-        entryRangeMin: this.editedRecommendation.entryRangeMin,
-        entryRangeMax: this.editedRecommendation.entryRangeMax,
-        stoploss: this.editedRecommendation.stoploss,
-        potentialLeftPct: this.editedRecommendation.potentialLeftPct,
-        durationText: this.editedRecommendation.durationText,
-        actions: this.editedRecommendation.actions,
-        alerts: this.editedRecommendation.alerts,
-        reason: this.editedRecommendation.reason,
-      };
+      // Prepare the update data - only include fields that exist
+      const updateData: Partial<StockRecommendation> = {};
+      
+      if (this.editedRecommendation.stockSymbol !== undefined) updateData.stockSymbol = this.editedRecommendation.stockSymbol;
+      if (this.editedRecommendation.stockName !== undefined) updateData.stockName = this.editedRecommendation.stockName;
+      if (this.editedRecommendation.stockExchange !== undefined) updateData.stockExchange = this.editedRecommendation.stockExchange;
+      if (this.editedRecommendation.recommendation !== undefined) updateData.recommendation = this.editedRecommendation.recommendation;
+      if (this.editedRecommendation.cmp !== undefined) updateData.cmp = this.editedRecommendation.cmp;
+      if (this.editedRecommendation.changePct !== undefined) updateData.changePct = this.editedRecommendation.changePct;
+      if (this.editedRecommendation.date !== undefined) updateData.date = this.editedRecommendation.date;
+      if (this.editedRecommendation.currentPrice !== undefined) updateData.currentPrice = this.editedRecommendation.currentPrice;
+      if (this.editedRecommendation.targetPrice !== undefined) updateData.targetPrice = this.editedRecommendation.targetPrice;
+      if (this.editedRecommendation.entryPrice !== undefined) updateData.entryPrice = this.editedRecommendation.entryPrice;
+      if (this.editedRecommendation.entryRangeMin !== undefined) updateData.entryRangeMin = this.editedRecommendation.entryRangeMin;
+      if (this.editedRecommendation.entryRangeMax !== undefined) updateData.entryRangeMax = this.editedRecommendation.entryRangeMax;
+      if (this.editedRecommendation.stoploss !== undefined) updateData.stoploss = this.editedRecommendation.stoploss;
+      if (this.editedRecommendation.potentialLeftPct !== undefined) updateData.potentialLeftPct = this.editedRecommendation.potentialLeftPct;
+      if (this.editedRecommendation.durationText !== undefined) updateData.durationText = this.editedRecommendation.durationText;
+      if (this.editedRecommendation.exitPrice !== undefined) {
+        const exitPriceValue =
+          typeof this.editedRecommendation.exitPrice === 'string'
+            ? parseFloat(this.editedRecommendation.exitPrice)
+            : this.editedRecommendation.exitPrice;
+        if (exitPriceValue !== undefined && !isNaN(exitPriceValue)) {
+          updateData.exitPrice = exitPriceValue;
+        }
+      }
+      if (this.editedRecommendation.exitDate !== undefined) updateData.exitDate = this.editedRecommendation.exitDate;
+      if (this.editedRecommendation.exitTime !== undefined) updateData.exitTime = this.editedRecommendation.exitTime;
+      if (this.editedRecommendation.actions !== undefined) updateData.actions = this.editedRecommendation.actions;
+      if (this.editedRecommendation.alerts !== undefined) updateData.alerts = this.editedRecommendation.alerts;
+      if (this.editedRecommendation.reason !== undefined) updateData.reason = this.editedRecommendation.reason;
+      if (this.editedRecommendation.researchReportUrl !== undefined) updateData.researchReportUrl = this.editedRecommendation.researchReportUrl;
+      if (this.editedRecommendation.profitEarned !== undefined) updateData.profitEarned = this.editedRecommendation.profitEarned;
 
+      console.log('Update Data:');
+      console.log(updateData);
+      
       // Update in Firestore
       await this.userService.updateStockRecommendation(
         this.selectedRecommendation.id,
@@ -431,6 +632,80 @@ export class RecommendationsPage implements OnInit {
     if (currentPrice > 0 && targetPrice > 0) {
       this.editedRecommendation.potentialLeftPct =
         ((targetPrice - currentPrice) / currentPrice) * 100;
+    }
+  }
+
+  // Report Upload Methods
+  triggerResearchReportUpload() {
+    this.reportFileInput.nativeElement.click();
+  }
+
+  async onResearchReportFileSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+
+    if (!file) return;
+
+    try {
+      this.isUploadingReport = true;
+
+      const symbol = this.editedRecommendation.stockSymbol || 'stock';
+      const fileName = `${symbol}_report_${Date.now()}.${file.name.split('.').pop()}`;
+
+      const downloadUrl = await this.storageService
+        .uploadResearchReport(file, 'research-reports/', fileName)
+        .toPromise();
+
+      if (downloadUrl) {
+        this.editedRecommendation.researchReportUrl = downloadUrl;
+        await this.presentToast('Research report uploaded successfully!', 'success');
+      }
+    } catch (error) {
+      console.error('Error uploading research report:', error);
+      await this.presentToast(
+        'Failed to upload research report: ' + (error as Error).message,
+        'danger'
+      );
+    } finally {
+      this.isUploadingReport = false;
+      input.value = '';
+    }
+  }
+
+  async removeResearchReport() {
+    const alert = await this.alertController.create({
+      header: 'Remove Research Report',
+      message: 'Are you sure you want to remove this research report?',
+      buttons: [
+        {
+          text: 'Cancel',
+          role: 'cancel',
+        },
+        {
+          text: 'Remove',
+          role: 'destructive',
+          handler: () => {
+            if (this.editedRecommendation.researchReportUrl) {
+              delete this.editedRecommendation.researchReportUrl;
+              this.presentToast('Research report removed successfully!', 'success');
+            }
+          },
+        },
+      ],
+    });
+
+    await alert.present();
+  }
+
+  viewReport() {
+    if (this.editedRecommendation.researchReportUrl) {
+      window.open(this.editedRecommendation.researchReportUrl, '_blank');
+    }
+  }
+
+  viewReportInTable(url: string | undefined) {
+    if (url) {
+      window.open(url, '_blank');
     }
   }
 }

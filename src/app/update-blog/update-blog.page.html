@@ -36,6 +36,64 @@
       </ion-card-content>
     </ion-card>
 
+    <!-- Image Upload Section -->
+    <ion-card class="image-upload-card">
+      <ion-card-content>
+        <div class="image-upload-section">
+          <h3>
+            <ion-icon name="image" color="warning"></ion-icon>
+            Featured Image
+          </h3>
+          <p>Update the featured image for this blog post (optional)</p>
+
+          <input
+            type="file"
+            accept="image/*"
+            (change)="onImageSelected($event)"
+            #fileInput
+            style="display: none;"
+          />
+
+          <div class="image-upload-area" *ngIf="!imageUrl">
+            <ion-button
+              fill="outline"
+              color="warning"
+              (click)="openFileDialog()"
+              class="upload-button"
+            >
+              <ion-icon name="cloud-upload" slot="start"></ion-icon>
+              Choose Image
+            </ion-button>
+            <p class="upload-hint">Max size: 5MB | Supported: JPG, PNG, GIF</p>
+          </div>
+
+          <div class="image-preview" *ngIf="imageUrl">
+            <img [src]="imageUrl" alt="Blog preview" class="preview-image" />
+            <div class="image-actions">
+              <ion-button
+                fill="outline"
+                color="danger"
+                size="small"
+                (click)="removeImage()"
+              >
+                <ion-icon name="trash" slot="start"></ion-icon>
+                Remove
+              </ion-button>
+              <ion-button
+                fill="outline"
+                color="warning"
+                size="small"
+                (click)="openFileDialog()"
+              >
+                <ion-icon name="refresh" slot="start"></ion-icon>
+                Change
+              </ion-button>
+            </div>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+
     <!-- Editor Wrapper -->
     <ion-card class="editor-card">
       <ion-card-content>

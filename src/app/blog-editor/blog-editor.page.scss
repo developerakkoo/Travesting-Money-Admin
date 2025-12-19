@@ -64,6 +64,83 @@ ion-card {
   }
 }
 
+// Image upload card
+.image-upload-card {
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, var(--ion-color-light-tint), var(--ion-color-light));
+
+  .image-upload-section {
+    h3 {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 0 0 8px 0;
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: var(--ion-color-primary);
+    }
+
+    p {
+      margin: 0 0 16px 0;
+      color: var(--ion-color-medium);
+      font-size: 0.9rem;
+    }
+
+    .image-upload-area {
+      text-align: center;
+      padding: 20px;
+      border: 2px dashed var(--ion-color-medium);
+      border-radius: 12px;
+      background: white;
+      transition: all 0.3s ease;
+
+      &:hover {
+        border-color: var(--ion-color-primary);
+        background: var(--ion-color-primary-tint);
+      }
+
+      .upload-button {
+        --border-radius: 8px;
+        font-weight: 500;
+        text-transform: none;
+        margin-bottom: 8px;
+      }
+
+      .upload-hint {
+        margin: 0;
+        font-size: 0.8rem;
+        color: var(--ion-color-medium);
+      }
+    }
+
+    .image-preview {
+      text-align: center;
+
+      .preview-image {
+        max-width: 100%;
+        max-height: 300px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        margin-bottom: 16px;
+        object-fit: cover;
+      }
+
+      .image-actions {
+        display: flex;
+        justify-content: center;
+        gap: 12px;
+        flex-wrap: wrap;
+
+        ion-button {
+          --border-radius: 6px;
+          font-weight: 500;
+          text-transform: none;
+        }
+      }
+    }
+  }
+}
+
 // Editor card
 .editor-card {
   margin-bottom: 16px;
@@ -288,6 +365,22 @@ ion-card {
 
       .action-buttons {
         justify-content: center;
+      }
+    }
+  }
+
+  .image-upload-card {
+    .image-upload-section {
+      .image-preview {
+        .image-actions {
+          flex-direction: column;
+          align-items: center;
+
+          ion-button {
+            width: 100%;
+            max-width: 200px;
+          }
+        }
       }
     }
   }

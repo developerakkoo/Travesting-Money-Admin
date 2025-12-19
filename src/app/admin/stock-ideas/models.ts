@@ -29,6 +29,10 @@ export interface StockIdea {
   entryRangeMin?: number;
   entryRangeMax?: number;
 
+  targetHit: boolean;
+  stoplossHit: boolean;
+  profitEarned: number;
+  isMarkedForDeletion: boolean;
   stoploss: number;
   targetPrice: number;
   durationText: string; // e.g., "1-3 months"

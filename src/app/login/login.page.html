@@ -11,7 +11,7 @@
         <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
             <ion-input labelPlacement="stacked" label="Enter Email" helperText="Enter your valid email" fill="outline"  required formControlName="email" type="text"></ion-input>
             <br>
-            <ion-input labelPlacement="stacked" label="Enter Password"  fill="outline" required formControlName="password" type="text"></ion-input>
+            <ion-input labelPlacement="stacked" label="Enter Password"  fill="outline" required formControlName="password" type="password"></ion-input>
           <br>
             <ion-button mode="ios" fill="solid" expand="block" color="primary" type="submit" [disabled]="loginForm.invalid">
             Login to Travesting Money

@@ -54,6 +54,13 @@ const routes: Routes = [
       import('./portfolio/portfolio.module').then((m) => m.PortfolioPageModule),
   },
   {
+    path: 'mutual-fund-portfolio',
+    loadChildren: () =>
+      import('./mutual-fund-portfolio/mutual-fund-portfolio.module').then(
+        (m) => m.MutualFundPortfolioPageModule
+      ),
+  },
+  {
     path: 'contacts',
     loadChildren: () =>
       import('./contacts/contacts.module').then((m) => m.ContactsPageModule),

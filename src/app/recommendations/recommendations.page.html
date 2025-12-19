@@ -182,6 +182,7 @@
               <th>Recommendation</th>
               <th>Current Price</th>
               <th>Target Price</th>
+              <th>Report</th>
               <th>Created At</th>
               <th>Actions</th>
             </tr>
@@ -220,6 +221,22 @@
               </td>
               <td>₹{{rec.currentPrice}}</td>
               <td>₹{{rec.targetPrice}}</td>
+              <td>
+                <ion-icon
+                  *ngIf="rec.researchReportUrl"
+                  name="document"
+                  color="success"
+                  [title]="'View research report'"
+                  (click)="viewReportInTable(rec.researchReportUrl)"
+                  class="clickable-icon"
+                ></ion-icon>
+                <ion-icon
+                  *ngIf="!rec.researchReportUrl"
+                  name="document-outline"
+                  color="medium"
+                  title="No report available"
+                ></ion-icon>
+              </td>
               <td>{{formatDate(rec.createdAt)}}</td>
               <td>
                 <div class="action-buttons">
@@ -235,9 +252,18 @@
                   <ion-button
                     fill="clear"
                     size="small"
+                    color="warning"
+                    (click)="performMarkAsDeletedRecommendation(rec)"
+                    title="Hide from Admin (Keep in Database)"
+                  >
+                    <ion-icon name="eye-off" slot="icon-only"></ion-icon>
+                  </ion-button>
+                  <ion-button
+                    fill="clear"
+                    size="small"
                     color="danger"
                     (click)="deleteRecommendation(rec)"
-                    title="Delete Recommendation"
+                    title="Permanently Delete from Database"
                   >
                     <ion-icon name="trash" slot="icon-only"></ion-icon>
                   </ion-button>
@@ -334,15 +360,23 @@
               </ion-item>
 
               <ion-item>
-                <ion-label position="stacked">Term</ion-label>
+                <ion-label position="stacked">Duration</ion-label>
                 <ion-select
-                  [(ngModel)]="editedRecommendation.term"
-                  placeholder="Select Term"
+                  [(ngModel)]="editedRecommendation.durationText"
+                  placeholder="Select Duration"
                 >
-                  <ion-select-option value="short">Short</ion-select-option>
-                  <ion-select-option value="mid">Mid</ion-select-option>
-                  <ion-select-option value="long">Long</ion-select-option>
+                  <ion-select-option value="1-3">1-3 months (Short Term)</ion-select-option>
+                  <ion-select-option value="1-6">1-6 months (Mid Term)</ion-select-option>
+                  <ion-select-option value="1-12">1-12 months (Long Term)</ion-select-option>
                 </ion-select>
+              </ion-item>
+              <br>
+              <ion-item>
+                <ion-label position="stacked">Profit Earned</ion-label>
+                <ion-input
+                  [(ngModel)]="editedRecommendation.profitEarned"
+                  placeholder="e.g., Add 10% profit earned in 10 days"
+                ></ion-input>
               </ion-item>
 
               <ion-item>
@@ -480,15 +514,67 @@
                     </ion-item>
                   </ion-col>
                 </ion-row>
+              </ion-grid>
+            </ion-card-content>
+          </ion-card>
 
+          <!-- Exit Details -->
+          <ion-card>
+            <ion-card-header>
+              <ion-card-title>Exit Details</ion-card-title>
+            </ion-card-header>
+            <ion-card-content>
+              <ion-grid>
                 <ion-row>
-                  <ion-col size="12">
+                  <ion-col size="12" size-md="4">
                     <ion-item>
-                      <ion-label position="stacked">Duration</ion-label>
+                      <ion-label position="stacked">Exit Price</ion-label>
                       <ion-input
-                        [(ngModel)]="editedRecommendation.durationText"
-                        placeholder="e.g., 3-6 months"
+                        type="number"
+                        [(ngModel)]="editedRecommendation.exitPrice"
+                        placeholder="e.g., 1250"
+                        inputmode="decimal"
                       ></ion-input>
+                    </ion-item>
+                  </ion-col>
+                  <ion-col size="12" size-md="4">
+                    <ion-item>
+                      <ion-label position="stacked">Exit Date</ion-label>
+                      <ion-input
+                        #exitDateInput
+                        type="date"
+                        [(ngModel)]="editedRecommendation.exitDate"
+                      ></ion-input>
+                      <ion-icon
+                        slot="end"
+                        name="calendar-outline"
+                        class="picker-icon"
+                        role="button"
+                        tabindex="0"
+                        (click)="openExitDatePicker()"
+                        (keydown.enter)="openExitDatePicker()"
+                        (keydown.space)="openExitDatePicker()"
+                      ></ion-icon>
+                    </ion-item>
+                  </ion-col>
+                  <ion-col size="12" size-md="4">
+                    <ion-item>
+                      <ion-label position="stacked">Exit Time</ion-label>
+                      <ion-input
+                        #exitTimeInput
+                        type="time"
+                        [(ngModel)]="editedRecommendation.exitTime"
+                      ></ion-input>
+                      <ion-icon
+                        slot="end"
+                        name="time-outline"
+                        class="picker-icon"
+                        role="button"
+                        tabindex="0"
+                        (click)="openExitTimePicker()"
+                        (keydown.enter)="openExitTimePicker()"
+                        (keydown.space)="openExitTimePicker()"
+                      ></ion-icon>
                     </ion-item>
                   </ion-col>
                 </ion-row>
@@ -665,6 +751,69 @@
                   rows="4"
                 ></ion-textarea>
               </ion-item>
+            </ion-card-content>
+          </ion-card>
+
+          <!-- Research Report Upload -->
+          <ion-card>
+            <ion-card-header>
+              <ion-card-title>Research Report</ion-card-title>
+            </ion-card-header>
+            <ion-card-content>
+              <p>Upload a research report for this stock recommendation</p>
+              
+              <ion-button
+                fill="outline"
+                color="secondary"
+                (click)="triggerResearchReportUpload()"
+                [disabled]="isUploadingReport"
+                class="ion-margin-top"
+              >
+                <ion-icon name="document-text" slot="start"></ion-icon>
+                {{ editedRecommendation.researchReportUrl ? 'Update Research Report' : 'Upload Research Report' }}
+              </ion-button>
+
+              <input
+                #reportFileInput
+                type="file"
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.txt"
+                style="display: none"
+                (change)="onResearchReportFileSelected($event)"
+              />
+
+              <div *ngIf="editedRecommendation.researchReportUrl" class="research-report-actions ion-margin-top">
+                <div class="report-status">
+                  <ion-chip color="success" size="small">
+                    <ion-icon name="checkmark-circle" slot="start"></ion-icon>
+                    Research Report Uploaded
+                  </ion-chip>
+                </div>
+                <div class="report-buttons">
+                  <ion-button
+                    fill="solid"
+                    size="small"
+                    color="primary"
+                    (click)="viewReport()"
+                  >
+                    <ion-icon name="open" slot="start"></ion-icon>
+                    View Report
+                  </ion-button>
+                  <ion-button
+                    fill="outline"
+                    size="small"
+                    color="danger"
+                    (click)="removeResearchReport()"
+                  >
+                    <ion-icon name="trash" slot="start"></ion-icon>
+                    Remove
+                  </ion-button>
+                </div>
+              </div>
+
+              <div *ngIf="isUploadingReport" class="ion-margin-top">
+                <ion-spinner></ion-spinner>
+                <p>Uploading research report...</p>
+              </div>
             </ion-card-content>
           </ion-card>
 

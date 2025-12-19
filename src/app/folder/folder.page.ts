@@ -97,17 +97,147 @@ export class FolderPage implements OnInit {
 
     try {
       const response: any = await this.userService.getUsers().toPromise();
+      
+      // Log the complete raw Firebase response
+      console.log('=== COMPLETE FIREBASE RESPONSE ===');
+      console.log('Full response object:', response);
+      console.log('Documents array:', response.documents);
+      
+      // Log each raw document from Firebase
+      if (response.documents) {
+        response.documents.forEach((doc: any, index: number) => {
+          console.log(`=== RAW FIREBASE DOCUMENT ${index + 1} ===`);
+          console.log('Document name:', doc.name);
+          console.log('Document fields:', doc.fields);
+          console.log('Complete document object:', doc);
+          console.log('=== END RAW DOCUMENT ${index + 1} ===');
+        });
+      }
+      
       this.users =
         response.documents?.map((doc: any) =>
           this.userService.convertFirestoreToUser(doc)
         ) || [];
       this.applyFilters();
+      
+      // Log converted users list to console
+      this.logUsersToConsole();
     } catch (error) {
       console.error('Error loading users:', error);
       this.presentToast('Error loading users', 'danger');
     } finally {
       await loading.dismiss();
     }
+  }
+
+  logUsersToConsole() {
+    console.log('=== USERS LIST ===');
+    console.log('Total users:', this.users.length);
+    console.log('Users data:', this.users);
+    
+    // Log each user individually for better readability
+    this.users.forEach((user, index) => {
+      console.log(`User ${index + 1}:`, {
+        uid: user.uid,
+        name: user.name,
+        email: user.email,
+        phoneNumber: user.phoneNumber,
+        isActive: user.isActive,
+        aadhaarVerified: user.aadhaarVerified,
+        createdAt: user.createdAt,
+        lastLoginAt: user.lastLoginAt,
+        updatedAt: user.updatedAt,
+        password: user.password,
+        panNumber: user.panNumber,
+        agreementUrls: user.agreementUrls,
+        subscriptionDetails: user.subscriptionDetails,
+        purchasedSubscriptions: user.purchasedSubscriptions
+      });
+    });
+    
+    console.log('=== END USERS LIST ===');
+    
+    // Show toast notification
+    this.presentToast(`Users list logged to console (${this.users.length} users)`, 'success');
+  }
+
+  async logCompleteFirebaseData() {
+    const loading = await this.loadingController.create({
+      message: 'Fetching Firebase data...',
+    });
+    await loading.present();
+
+    try {
+      const response: any = await this.userService.getUsers().toPromise();
+      
+      // Log the complete raw Firebase response
+      console.log('=== COMPLETE FIREBASE RESPONSE ===');
+      console.log('Full response object:', response);
+      console.log('Documents array:', response.documents);
+      
+      // Log each raw document from Firebase
+      if (response.documents) {
+        response.documents.forEach((doc: any, index: number) => {
+          console.log(`=== RAW FIREBASE DOCUMENT ${index + 1} ===`);
+          console.log('Document name:', doc.name);
+          console.log('Document fields:', doc.fields);
+          console.log('Complete document object:', doc);
+          console.log('=== END RAW DOCUMENT ${index + 1} ===');
+        });
+      }
+      
+      console.log('=== END COMPLETE FIREBASE RESPONSE ===');
+      this.presentToast('Complete Firebase data logged to console', 'success');
+    } catch (error) {
+      console.error('Error fetching Firebase data:', error);
+      this.presentToast('Error fetching Firebase data', 'danger');
+    } finally {
+      await loading.dismiss();
+    }
+  }
+
+  async downloadAgreementPDF(agreement: any, userName: string) {
+    if (!agreement.downloadUrl) {
+      this.presentToast('No PDF available for this agreement', 'warning');
+      return;
+    }
+
+    const loading = await this.loadingController.create({
+      message: 'Downloading Agreement PDF...',
+    });
+    await loading.present();
+
+    try {
+      // Create a temporary anchor element to trigger download
+      const link = document.createElement('a');
+      link.href = agreement.downloadUrl;
+      link.download = `${userName}_${agreement.fileName}`;
+      link.target = '_blank';
+      
+      // Append to body, click, and remove
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      this.presentToast(`Agreement PDF downloaded for ${userName}`, 'success');
+    } catch (error) {
+      console.error('Error downloading agreement PDF:', error);
+      this.presentToast('Failed to download agreement PDF', 'danger');
+    } finally {
+      await loading.dismiss();
+    }
+  }
+
+  async downloadUserPDF(user: User) {
+    // This method is kept for backward compatibility
+    if (!user.agreementUrls || user.agreementUrls.length === 0) {
+      this.presentToast('No agreements available for this user', 'warning');
+      return;
+    }
+
+    // Download the first agreement if multiple exist
+    const firstAgreement = user.agreementUrls[0];
+    await this.downloadAgreementPDF(firstAgreement, user.name);
   }
 
   applyFilters() {
@@ -275,7 +405,7 @@ export class FolderPage implements OnInit {
         throw new Error('Please enter valid prices');
       }
 
-      const recommendation: Omit<StockRecommendation, 'id' | 'createdAt'> = {
+        const recommendation: Omit<StockRecommendation, 'id' | 'createdAt'> = {
         userId: this.selectedUser.uid,
         stockSymbol: data.stockSymbol.trim(),
         stockName: data.stockName.trim(),
@@ -284,6 +414,10 @@ export class FolderPage implements OnInit {
         recommendation: data.recommendation.trim().toUpperCase(),
         date: new Date().toISOString(), // Current date
         currentPrice: parseFloat(data.currentPrice),
+        targetHit: false,
+        stoplossHit: false,
+          profitEarned: '',
+        isMarkedForDeletion: false,
         targetPrice: parseFloat(data.targetPrice),
         entryPrice: parseFloat(data.currentPrice), // Use currentPrice as entryPrice for now
         entryRangeMin: parseFloat(data.currentPrice) * 0.95, // 5% below current price
@@ -408,6 +542,10 @@ export class FolderPage implements OnInit {
       date: new Date().toISOString(), // Current date
       currentPrice: 100,
       targetPrice: 120,
+      targetHit: false,
+      stoplossHit: false,
+        profitEarned: '',
+      isMarkedForDeletion: false,
       entryPrice: 100, // Use same as currentPrice for test
       entryRangeMin: 95, // 5% below current price
       entryRangeMax: 105, // 5% above current price

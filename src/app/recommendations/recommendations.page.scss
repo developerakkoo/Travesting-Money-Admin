@@ -226,6 +226,87 @@
   border-top: 1px solid var(--ion-color-light-shade);
 }
 
+// Clickable icon
+.clickable-icon {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  
+  &:hover {
+    opacity: 0.7;
+    transform: scale(1.1);
+  }
+}
+
+// Picker icon styling
+.picker-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  color: var(--ion-color-primary);
+  margin-left: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    color: var(--ion-color-primary-shade);
+    transform: scale(1.1);
+  }
+}
+
+// Research Report Actions Styling
+.research-report-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px;
+  background: var(--ion-color-light-tint);
+  border-radius: 8px;
+  border: 1px solid var(--ion-color-light-shade);
+  margin-top: 12px;
+
+  .report-status {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  .report-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+
+    ion-button {
+      --border-radius: 6px;
+      font-weight: 500;
+      min-width: 120px;
+      margin: 0;
+
+      &[color="primary"] {
+        --background: var(--ion-color-primary);
+        --color: white;
+        --border-color: var(--ion-color-primary);
+
+        &:hover {
+          --background: var(--ion-color-primary-shade);
+        }
+      }
+
+      &[color="danger"] {
+        --border-color: var(--ion-color-danger);
+        --color: var(--ion-color-danger);
+        --background: transparent;
+
+        &:hover {
+          --background: var(--ion-color-danger);
+          --color: white;
+        }
+      }
+    }
+  }
+}
+
 // Responsive design
 @media (max-width: 768px) {
   .section-header-with-button {
@@ -262,6 +343,18 @@
 
     th {
       font-size: 0.75rem;
+    }
+  }
+
+  .research-report-actions {
+    .report-buttons {
+      flex-direction: column;
+      width: 100%;
+
+      ion-button {
+        width: 100%;
+        min-width: unset;
+      }
     }
   }
 }

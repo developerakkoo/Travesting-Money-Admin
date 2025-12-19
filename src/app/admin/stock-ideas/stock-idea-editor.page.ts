@@ -35,7 +35,7 @@ import {
 import { RecentTradeUpdatesPipe } from './recent-trade-updates.pipe';
 import { StockIdea, TradeAction, Term, TradeActionType } from './models';
 import { UserService, StockRecommendation } from '../../services/user.service';
-// import { StorageService } from '../../services/storage.service'; // COMMENTED OUT - Storage not set up yet
+import { StorageService } from '../../services/storage.service';
 
 @Component({
   selector: 'app-stock-idea-editor',
@@ -51,16 +51,15 @@ import { UserService, StockRecommendation } from '../../services/user.service';
   ],
 })
 export class StockIdeaEditorPage implements OnInit, OnDestroy {
-  // File input ViewChild references - COMMENTED OUT
-  // @ViewChild('imageFileInput') imageFileInput!: ElementRef<HTMLInputElement>;
-  // @ViewChild('reportFileInput') reportFileInput!: ElementRef<HTMLInputElement>;
+  // File input ViewChild references
+  @ViewChild('reportFileInput') reportFileInput!: ElementRef<HTMLInputElement>;
 
   private fb = inject(FormBuilder);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private stockIdeaService = inject(StockIdeaService);
   private userService = inject(UserService);
-  // private storageService = inject(StorageService); // COMMENTED OUT - Storage not set up yet
+  private storageService = inject(StorageService);
   private store = inject(StockIdeaStore);
   private popoverController = inject(PopoverController);
   private toastController = inject(ToastController);
@@ -70,11 +69,8 @@ export class StockIdeaEditorPage implements OnInit, OnDestroy {
   stockIdeaForm!: FormGroup;
   private subscriptions: Subscription[] = [];
 
-  // File upload state - COMMENTED OUT
-  // isUploadingImage = false;
-  // imageUploadProgress = 0;
-  // isUploadingReport = false;
-  // reportUploadProgress = 0;
+  // File upload state
+  isUploadingReport = false;
 
   // Store signals
   currentIdea = this.store.currentIdea;
@@ -119,10 +115,10 @@ export class StockIdeaEditorPage implements OnInit, OnDestroy {
       stoploss: [0, [Validators.required, Validators.min(0.01)]],
       potentialLeftPct: [0, [Validators.required, Validators.min(0.1)]],
       durationText: ['', [Validators.required]],
+      profitEarned: ['', []],
       actions: this.fb.array([]),
       alerts: this.fb.array([]),
-      // imageUrl: [''], // COMMENTED OUT
-      // researchReportUrl: [''], // COMMENTED OUT
+      researchReportUrl: [''],
     });
 
     // Add custom validators
@@ -314,6 +310,10 @@ export class StockIdeaEditorPage implements OnInit, OnDestroy {
         currentPrice: formValue.entryPrice,
         targetPrice: this.getCalculatedTargetPrice() || 0,
         entryPrice: formValue.entryPrice,
+        targetHit: false,
+        stoplossHit: false,
+  profitEarned: formValue.profitEarned || '',
+        isMarkedForDeletion: false,
         entryRangeMin: formValue.entryRangeMin,
         entryRangeMax: formValue.entryRangeMax,
         stoploss: formValue.stoploss,
@@ -322,8 +322,7 @@ export class StockIdeaEditorPage implements OnInit, OnDestroy {
         actions: formValue.actions || [],
         alerts: formValue.alerts || [],
         reason: `Stock idea: ${formValue.durationText}. Stop loss: ₹${formValue.stoploss}`,
-        // imageUrl: formValue.imageUrl, // COMMENTED OUT
-        // researchReportUrl: formValue.researchReportUrl, // COMMENTED OUT
+        researchReportUrl: formValue.researchReportUrl || undefined,
         createdBy: 'admin',
       };
 
@@ -342,7 +341,7 @@ export class StockIdeaEditorPage implements OnInit, OnDestroy {
         localResult = (await this.stockIdeaService
           .create(formValue)
           .toPromise()) as StockIdea;
-      }
+              profitEarned: formValue.profitEarned || '',
 
       this.store.setCurrentIdea(localResult);
       await loading.dismiss();
@@ -350,7 +349,7 @@ export class StockIdeaEditorPage implements OnInit, OnDestroy {
         'Recommendation saved to Firestore successfully!',
         'success'
       );
-
+    }
       // Navigate to the saved idea
       if (currentIdea?.id === 'new') {
         this.router.navigate(['/admin/stock-ideas', localResult.id]);
@@ -401,6 +400,10 @@ export class StockIdeaEditorPage implements OnInit, OnDestroy {
         changePct: formValue.changePct || undefined,
         date: formValue.date,
         currentPrice: formValue.entryPrice,
+        targetHit: currentIdea?.targetHit || false,
+        stoplossHit: currentIdea?.stoplossHit || false,
+  profitEarned: formValue.profitEarned || '',
+        isMarkedForDeletion: currentIdea?.isMarkedForDeletion || false,
         targetPrice: this.getCalculatedTargetPrice() || 0,
         entryPrice: formValue.entryPrice,
         entryRangeMin: formValue.entryRangeMin,
@@ -476,6 +479,10 @@ export class StockIdeaEditorPage implements OnInit, OnDestroy {
         entryRangeMin: formValue.entryRangeMin,
         entryRangeMax: formValue.entryRangeMax,
         stoploss: formValue.stoploss,
+        targetHit: currentIdea?.targetHit || false,
+        stoplossHit: currentIdea?.stoplossHit || false,
+          profitEarned: formValue.profitEarned || '',
+        isMarkedForDeletion: currentIdea?.isMarkedForDeletion || false,
         potentialLeftPct: formValue.potentialLeftPct,
         durationText: formValue.durationText,
         actions: formValue.actions || [],
@@ -558,66 +565,11 @@ export class StockIdeaEditorPage implements OnInit, OnDestroy {
     await toast.present();
   }
 
-  // File upload methods - COMMENTED OUT
-  /*
-  triggerImageUpload(): void {
-    this.imageFileInput.nativeElement.click();
-  }
-
+  // Report Upload Methods
   triggerResearchReportUpload(): void {
     this.reportFileInput.nativeElement.click();
   }
-  */
 
-  /*
-  async onImageFileSelected(event: Event): Promise<void> {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-
-    if (!file) return;
-
-    try {
-      this.isUploadingImage = true;
-      this.imageUploadProgress = 0;
-
-      // Create a unique file name with stock symbol
-      const symbol = this.stockIdeaForm.get('symbol')?.value || 'stock';
-      const fileName = `${symbol}_${Date.now()}.${file.name.split('.').pop()}`;
-
-      // Upload the image
-      const downloadUrl = await this.storageService
-        .uploadImage(file, 'stock-images/', fileName)
-        .toPromise();
-
-      if (downloadUrl) {
-        // Update the form and current idea
-        this.stockIdeaForm.patchValue({ imageUrl: downloadUrl });
-
-        // Update the store
-        const currentIdea = this.currentIdea();
-        if (currentIdea) {
-          const updatedIdea = { ...currentIdea, imageUrl: downloadUrl };
-          this.store.setCurrentIdea(updatedIdea);
-        }
-
-        await this.presentToast('Image uploaded successfully!', 'success');
-      }
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      await this.presentToast(
-        'Failed to upload image: ' + (error as Error).message,
-        'danger'
-      );
-    } finally {
-      this.isUploadingImage = false;
-      this.imageUploadProgress = 0;
-      // Clear the input
-      input.value = '';
-    }
-  }
-  */
-
-  /*
   async onResearchReportFileSelected(event: Event): Promise<void> {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
@@ -626,13 +578,10 @@ export class StockIdeaEditorPage implements OnInit, OnDestroy {
 
     try {
       this.isUploadingReport = true;
-      this.reportUploadProgress = 0;
 
       // Create a unique file name with stock symbol
       const symbol = this.stockIdeaForm.get('symbol')?.value || 'stock';
-      const fileName = `${symbol}_report_${Date.now()}.${file.name
-        .split('.')
-        .pop()}`;
+      const fileName = `${symbol}_report_${Date.now()}.${file.name.split('.').pop()}`;
 
       // Upload the research report
       const downloadUrl = await this.storageService
@@ -666,64 +615,10 @@ export class StockIdeaEditorPage implements OnInit, OnDestroy {
       );
     } finally {
       this.isUploadingReport = false;
-      this.reportUploadProgress = 0;
-      // Clear the input
       input.value = '';
     }
   }
-  */
 
-  /*
-  async removeImage(): Promise<void> {
-    const alert = await this.alertController.create({
-      header: 'Remove Image',
-      message: 'Are you sure you want to remove this image?',
-      buttons: [
-        {
-          text: 'Cancel',
-          role: 'cancel',
-        },
-        {
-          text: 'Remove',
-          role: 'destructive',
-          handler: async () => {
-            try {
-              const currentIdea = this.currentIdea();
-              if (currentIdea?.imageUrl) {
-                // Delete from Firebase Storage
-                await this.storageService
-                  .deleteFile(currentIdea.imageUrl)
-                  .toPromise();
-
-                // Update the form and current idea
-                this.stockIdeaForm.patchValue({ imageUrl: '' });
-
-                // Update the store
-                const updatedIdea = { ...currentIdea, imageUrl: undefined };
-                this.store.setCurrentIdea(updatedIdea);
-
-                await this.presentToast(
-                  'Image removed successfully!',
-                  'success'
-                );
-              }
-            } catch (error) {
-              console.error('Error removing image:', error);
-              await this.presentToast(
-                'Failed to remove image: ' + (error as Error).message,
-                'danger'
-              );
-            }
-          },
-        },
-      ],
-    });
-
-    await alert.present();
-  }
-  */
-
-  /*
   async removeResearchReport(): Promise<void> {
     const alert = await this.alertController.create({
       header: 'Remove Research Report',
@@ -774,7 +669,13 @@ export class StockIdeaEditorPage implements OnInit, OnDestroy {
 
     await alert.present();
   }
-  */
+
+  viewReport() {
+    const url = this.stockIdeaForm.get('researchReportUrl')?.value;
+    if (url) {
+      window.open(url, '_blank');
+    }
+  }
 
   // Info popover data
   getBuySellInfo(): PopoverInfoData {

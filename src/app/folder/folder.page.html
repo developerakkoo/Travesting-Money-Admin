@@ -7,6 +7,22 @@
     <ion-buttons slot="end">
       <ion-button
         fill="clear"
+        (click)="logUsersToConsole()"
+        color="primary"
+        title="Log Users to Console"
+      >
+        <ion-icon name="list" slot="icon-only"></ion-icon>
+      </ion-button>
+      <ion-button
+        fill="clear"
+        (click)="logCompleteFirebaseData()"
+        color="warning"
+        title="Log Complete Firebase Data"
+      >
+        <ion-icon name="server" slot="icon-only"></ion-icon>
+      </ion-button>
+      <ion-button
+        fill="clear"
         (click)="openStockRecommendationEditor()"
         color="success"
         title="Stock Recommendations"
@@ -194,6 +210,13 @@
                 <div class="user-info">
                   <strong>{{user.name}}</strong>
                   <small>{{user.uid}}</small>
+                  <div class="download-link" *ngIf="user.agreementUrls && user.agreementUrls.length > 0">
+                    <div *ngFor="let agreement of user.agreementUrls; let i = index" class="agreement-item">
+                      <a (click)="downloadAgreementPDF(agreement, user.name)" class="download-agreement-link">
+                        📄 Agreement {{i + 1}} ({{formatDate(agreement.generatedDate)}})
+                      </a>
+                    </div>
+                  </div>
                 </div>
               </td>
               <td>{{user.email}}</td>

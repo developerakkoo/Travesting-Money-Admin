@@ -3,9 +3,9 @@
     <ion-buttons slot="start">
       <ion-back-button defaultHref="/folder/dashboard"></ion-back-button>
     </ion-buttons>
-    <ion-title>Portfolio 📊</ion-title>
+    <ion-title>Mutual Fund Portfolio 📊</ion-title>
     <ion-buttons slot="end">
-      <ion-button fill="clear" (click)="addHolding()" color="success">
+      <ion-button fill="clear" (click)="addMutualFund()" color="success">
         <ion-icon name="add" slot="icon-only"></ion-icon>
       </ion-button>
     </ion-buttons>
@@ -24,8 +24,8 @@
                 <ion-icon name="trending-up" color="primary"></ion-icon>
               </div>
               <div class="stat-info">
-                <div class="stat-number">{{getTotalHoldings()}}</div>
-                <div class="stat-label">Total Holdings</div>
+                <div class="stat-number">{{getTotalMutualFunds()}}</div>
+                <div class="stat-label">Total Funds</div>
               </div>
             </div>
           </ion-card-content>
@@ -40,9 +40,9 @@
               </div>
               <div class="stat-info">
                 <div class="stat-number">
-                  {{getTotalPercentage() | number:'1.1-1'}}%
+                  {{getTotalWeight() | number:'1.1-1'}}%
                 </div>
-                <div class="stat-label">Total Allocation</div>
+                <div class="stat-label">Total Weight</div>
               </div>
             </div>
           </ion-card-content>
@@ -51,52 +51,24 @@
     </ion-row>
   </ion-grid>
 
-  <!-- Charts Section -->
+  <!-- Chart Section -->
   <ion-card>
     <ion-card-header>
-      <ion-card-title>Portfolio Analytics 📊</ion-card-title>
+      <ion-card-title>Portfolio Weight Distribution 📊</ion-card-title>
     </ion-card-header>
     <ion-card-content>
-      <ion-grid>
-        <ion-row>
-          <!-- Sector-wise Allocation Chart -->
-          <ion-col size="12" size-md="4">
-            <div class="chart-container">
-              <h3>Sector-wise Allocation</h3>
-              <div class="chart-wrapper">
-                <canvas #sectorChart height="300"></canvas>
-              </div>
-            </div>
-          </ion-col>
-
-          <!-- Market Capitalization Chart -->
-          <ion-col size="12" size-md="4">
-            <div class="chart-container">
-              <h3>Market Capitalization</h3>
-              <div class="chart-wrapper">
-                <canvas #marketCapChart height="300"></canvas>
-              </div>
-            </div>
-          </ion-col>
-
-          <!-- Asset Allocation Chart -->
-          <ion-col size="12" size-md="4">
-            <div class="chart-container">
-              <h3>Asset Allocation</h3>
-              <div class="chart-wrapper">
-                <canvas #assetChart height="300"></canvas>
-              </div>
-            </div>
-          </ion-col>
-        </ion-row>
-      </ion-grid>
+      <div class="chart-container">
+        <div class="chart-wrapper">
+          <canvas #weightChart height="300"></canvas>
+        </div>
+      </div>
     </ion-card-content>
   </ion-card>
 
   <!-- Search and Filters -->
   <ion-card>
     <ion-card-header>
-      <ion-card-title>Search & Filter Holdings</ion-card-title>
+      <ion-card-title>Search & Filter Mutual Funds</ion-card-title>
     </ion-card-header>
     <ion-card-content>
       <ion-grid>
@@ -105,7 +77,7 @@
             <ion-searchbar
               [(ngModel)]="searchTerm"
               (ionInput)="onSearchChange()"
-              placeholder="Search by name, sector, instrument, or market cap..."
+              placeholder="Search by fund name, category, or role..."
               show-clear-button="focus"
             ></ion-searchbar>
           </ion-col>
@@ -114,13 +86,13 @@
               <ion-icon name="refresh" slot="start"></ion-icon>
               Clear Filters
             </ion-button>
-            <ion-button fill="solid" (click)="addHolding()" color="success">
+            <ion-button fill="solid" (click)="addMutualFund()" color="success">
               <ion-icon name="add" slot="start"></ion-icon>
-              Add Holding
+              Add Fund
             </ion-button>
             <ion-button
               fill="outline"
-              (click)="bulkImportHoldings()"
+              (click)="bulkImportMutualFunds()"
               color="warning"
             >
               <ion-icon name="download" slot="start"></ion-icon>
@@ -132,67 +104,68 @@
     </ion-card-content>
   </ion-card>
 
-  <!-- Holdings Table -->
+  <!-- Mutual Funds Table -->
   <ion-card>
     <ion-card-header>
       <ion-card-title>
-        Holdings ({{filteredHoldings.length}} found)
+        Mutual Funds ({{filteredMutualFunds.length}} found)
       </ion-card-title>
     </ion-card-header>
     <ion-card-content>
       <div class="table-container">
-        <table class="holdings-table">
+        <table class="funds-table">
           <thead>
             <tr>
               <th>Sr. No</th>
-              <th>Name</th>
-              <th>Sector</th>
-              <th>Instrument</th>
-              <th>Market Cap</th>
-              <th>% of Holdings</th>
+              <th>Fund Name</th>
+              <th>Category</th>
+              <th>Portfolio Weight</th>
+              <th>Expense Ratio</th>
+              <th>Role</th>
               <th>Created At</th>
               <th>Actions</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let holding of getPaginatedHoldings(); let i = index">
+            <tr *ngFor="let fund of getPaginatedMutualFunds(); let i = index">
               <td>{{(currentPage - 1) * itemsPerPage + i + 1}}</td>
               <td>
-                <div class="holding-name">{{holding.name}}</div>
+                <div class="fund-name">{{fund.fundName}}</div>
               </td>
               <td>
                 <ion-chip size="small" color="primary"
-                  >{{holding.sector}}</ion-chip
+                  >{{fund.category}}</ion-chip
                 >
-              </td>
-              <td>
-                <ion-chip size="small" color="secondary"
-                  >{{holding.instrument}}</ion-chip
-                >
-              </td>
-              <td>
-                <ion-chip size="small" color="tertiary" *ngIf="holding.marketCapitalization">
-                  {{holding.marketCapitalization}}
-                </ion-chip>
-                <span *ngIf="!holding.marketCapitalization" class="no-data">-</span>
               </td>
               <td>
                 <div class="percentage-display">
                   <ion-badge
-                    [color]="holding.percentageOfHoldings > 10 ? 'success' : 'warning'"
+                    [color]="fund.portfolioWeight > 10 ? 'success' : 'warning'"
                   >
-                    {{holding.percentageOfHoldings | number:'1.1-1'}}%
+                    {{fund.portfolioWeight | number:'1.1-1'}}%
                   </ion-badge>
                 </div>
               </td>
-              <td>{{formatDate(holding.createdAt)}}</td>
+              <td>
+                <div class="percentage-display">
+                  <ion-badge color="tertiary">
+                    {{fund.expenseRatio | number:'1.2-2'}}%
+                  </ion-badge>
+                </div>
+              </td>
+              <td>
+                <ion-chip size="small" color="secondary"
+                  >{{fund.role}}</ion-chip
+                >
+              </td>
+              <td>{{formatDate(fund.createdAt)}}</td>
               <td>
                 <ion-button
                   fill="clear"
                   size="small"
                   color="primary"
-                  (click)="editHolding(holding)"
-                  title="Edit Holding"
+                  (click)="editMutualFund(fund)"
+                  title="Edit Mutual Fund"
                 >
                   <ion-icon name="create" slot="icon-only"></ion-icon>
                 </ion-button>
@@ -200,8 +173,8 @@
                   fill="clear"
                   size="small"
                   color="danger"
-                  (click)="deleteHolding(holding)"
-                  title="Delete Holding"
+                  (click)="deleteMutualFund(fund)"
+                  title="Delete Mutual Fund"
                 >
                   <ion-icon name="trash" slot="icon-only"></ion-icon>
                 </ion-button>
@@ -211,13 +184,13 @@
         </table>
 
         <!-- Empty State -->
-        <div class="empty-state" *ngIf="filteredHoldings.length === 0">
+        <div class="empty-state" *ngIf="filteredMutualFunds.length === 0">
           <ion-icon name="pie-chart-outline"></ion-icon>
-          <h3>No Holdings Found</h3>
-          <p>Try adjusting your search criteria or add your first holding</p>
-          <ion-button fill="outline" (click)="addHolding()">
+          <h3>No Mutual Funds Found</h3>
+          <p>Try adjusting your search criteria or add your first mutual fund</p>
+          <ion-button fill="outline" (click)="addMutualFund()">
             <ion-icon name="add" slot="start"></ion-icon>
-            Add First Holding
+            Add First Fund
           </ion-button>
         </div>
       </div>
@@ -247,3 +220,4 @@
     </ion-card-content>
   </ion-card>
 </ion-content>
+

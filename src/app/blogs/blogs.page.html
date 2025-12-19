@@ -114,6 +114,15 @@
         </div>
 
         <div class="blog-preview">
+          <!-- Featured Image -->
+          <div *ngIf="blog.fields['imageUrl']?.stringValue" class="blog-image">
+            <img 
+              [src]="blog.fields['imageUrl'].stringValue" 
+              [alt]="blog.fields['title'].stringValue"
+              class="featured-image"
+            />
+          </div>
+          
           <p class="blog-excerpt">
             {{ getBlogExcerpt(blog.fields['content']?.stringValue) }}
           </p>

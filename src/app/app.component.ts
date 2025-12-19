@@ -12,6 +12,7 @@ export class AppComponent {
     { title: 'Subscriptions', url: '/folder/favorites', icon: 'card' },
     // { title: 'Courses', url: '/folder/archived', icon: 'people' },
     { title: 'Portfolio', url: '/portfolio', icon: 'pie-chart' },
+    { title: 'Mutual Fund Portfolio', url: '/mutual-fund-portfolio', icon: 'pie-chart' },
     { title: 'Contacts', url: '/contacts', icon: 'people' },
   ];
   constructor() {}

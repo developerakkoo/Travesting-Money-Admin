@@ -77,7 +77,8 @@ export class PortfolioPage implements OnInit, AfterViewInit {
         (holding) =>
           holding.name.toLowerCase().includes(term) ||
           holding.sector.toLowerCase().includes(term) ||
-          holding.instrument.toLowerCase().includes(term)
+          holding.instrument.toLowerCase().includes(term) ||
+          (holding.marketCapitalization && holding.marketCapitalization.toLowerCase().includes(term))
       );
     }
 
@@ -148,13 +149,18 @@ export class PortfolioPage implements OnInit, AfterViewInit {
     const capMap = new Map<string, number>();
 
     this.filteredHoldings.forEach((holding) => {
-      let capCategory = 'Small Cap';
+      // Use actual marketCapitalization field if available, otherwise fallback to percentage-based calculation
+      let capCategory = holding.marketCapitalization || 'Small Cap';
 
-      // Define market cap categories based on percentage
-      if (holding.percentageOfHoldings >= 5) {
-        capCategory = 'Large Cap';
-      } else if (holding.percentageOfHoldings >= 2) {
-        capCategory = 'Mid Cap';
+      // If no marketCapitalization is set, define market cap categories based on percentage (fallback)
+      if (!holding.marketCapitalization) {
+        if (holding.percentageOfHoldings >= 5) {
+          capCategory = 'Large Cap';
+        } else if (holding.percentageOfHoldings >= 2) {
+          capCategory = 'Mid Cap';
+        } else {
+          capCategory = 'Small Cap';
+        }
       }
 
       const current = capMap.get(capCategory) || 0;
@@ -318,6 +324,11 @@ export class PortfolioPage implements OnInit, AfterViewInit {
           min: 0,
           max: 100,
         },
+        {
+          name: 'marketCapitalization',
+          type: 'text',
+          placeholder: 'Market Capitalization (e.g., Large Cap, Mid Cap, Small Cap)',
+        },
       ],
       buttons: [
         {
@@ -366,6 +377,12 @@ export class PortfolioPage implements OnInit, AfterViewInit {
           min: 0,
           max: 100,
         },
+        {
+          name: 'marketCapitalization',
+          type: 'text',
+          value: holding.marketCapitalization || '',
+          placeholder: 'Market Capitalization (e.g., Large Cap, Mid Cap, Small Cap)',
+        },
       ],
       buttons: [
         {
@@ -413,7 +430,7 @@ export class PortfolioPage implements OnInit, AfterViewInit {
       !data.instrument ||
       !data.percentageOfHoldings
     ) {
-      await this.presentToast('Please fill in all fields', 'warning');
+      await this.presentToast('Please fill in all required fields', 'warning');
       return;
     }
 
@@ -428,6 +445,7 @@ export class PortfolioPage implements OnInit, AfterViewInit {
         sector: data.sector.trim(),
         instrument: data.instrument.trim(),
         percentageOfHoldings: parseFloat(data.percentageOfHoldings),
+        marketCapitalization: data.marketCapitalization?.trim() || undefined,
         createdBy: 'admin',
       };
 
@@ -455,6 +473,7 @@ export class PortfolioPage implements OnInit, AfterViewInit {
         sector: data.sector.trim(),
         instrument: data.instrument.trim(),
         percentageOfHoldings: parseFloat(data.percentageOfHoldings),
+        marketCapitalization: data.marketCapitalization?.trim() || undefined,
       };
 
       const result = await this.userService.updateHolding(id, updateData);
@@ -543,232 +562,277 @@ export class PortfolioPage implements OnInit, AfterViewInit {
   async bulkImportHoldings() {
     const holdingsData = [
       {
+        name: 'Bharat Bond ETF - April 2030',
+        sector: 'Debt',
+        instrument: 'ETF',
+        percentage: 20,
+        marketCapitalization: undefined,
+      },
+      {
         name: 'Motilal Oswal MOSt Shares NASDAQ-100 ETF',
         sector: 'Equity',
         instrument: 'ETF',
         percentage: 15,
+        marketCapitalization: undefined,
       },
       {
         name: 'Nippon India ETF Gold BeES',
         sector: 'Commodities',
         instrument: 'ETF',
         percentage: 10,
+        marketCapitalization: undefined,
       },
       {
         name: 'HDFC Bank Ltd',
         sector: 'Financial',
         instrument: 'Equity',
         percentage: 5,
+        marketCapitalization: 'Large Cap',
       },
       {
         name: 'Nippon India Silver ETF',
         sector: 'Commodities',
         instrument: 'ETF',
         percentage: 5,
+        marketCapitalization: undefined,
       },
       {
         name: 'ICICI Bank Ltd',
         sector: 'Financial',
         instrument: 'Equity',
         percentage: 4,
+        marketCapitalization: 'Large Cap',
       },
       {
         name: 'Axis Bank Ltd',
         sector: 'Financial',
         instrument: 'Equity',
         percentage: 3,
+        marketCapitalization: 'Large Cap',
       },
       {
         name: 'Mahindra & Mahindra Ltd',
         sector: 'Automobile',
         instrument: 'Equity',
         percentage: 2.5,
+        marketCapitalization: 'Large Cap',
       },
       {
         name: 'Maruti Suzuki India Ltd',
         sector: 'Automobile',
         instrument: 'Equity',
         percentage: 2.5,
-      },
-      {
-        name: 'State Bank of India',
-        sector: 'Financial',
-        instrument: 'Equity',
-        percentage: 2,
-      },
-      {
-        name: 'Kotak Mahindra Bank Ltd',
-        sector: 'Financial',
-        instrument: 'Equity',
-        percentage: 2,
-      },
-      {
-        name: 'Power Grid Corporation of India Ltd',
-        sector: 'Energy',
-        instrument: 'Equity',
-        percentage: 2,
-      },
-      {
-        name: 'Trent Ltd',
-        sector: 'Services',
-        instrument: 'Equity',
-        percentage: 2,
+        marketCapitalization: 'Large Cap',
       },
       {
         name: 'ITC Ltd',
         sector: 'Consumer Staples',
         instrument: 'Equity',
         percentage: 2,
+        marketCapitalization: 'Large Cap',
+      },
+      {
+        name: 'Kotak Mahindra Bank Ltd',
+        sector: 'Financial',
+        instrument: 'Equity',
+        percentage: 2,
+        marketCapitalization: 'Large Cap',
+      },
+      {
+        name: 'Power Grid Corporation of India Ltd',
+        sector: 'Energy',
+        instrument: 'Equity',
+        percentage: 2,
+        marketCapitalization: 'Large Cap',
+      },
+      {
+        name: 'State Bank of India',
+        sector: 'Financial',
+        instrument: 'Equity',
+        percentage: 2,
+        marketCapitalization: 'Large Cap',
+      },
+      {
+        name: 'Trent Ltd',
+        sector: 'Services',
+        instrument: 'Equity',
+        percentage: 2,
+        marketCapitalization: 'Large Cap',
       },
       {
         name: 'Coal India Ltd',
         sector: 'Energy',
         instrument: 'Equity',
         percentage: 1.5,
+        marketCapitalization: 'Large Cap',
       },
       {
         name: 'Infosys Ltd',
         sector: 'Technology',
         instrument: 'Equity',
         percentage: 1.5,
+        marketCapitalization: 'Large Cap',
       },
       {
         name: 'UltraTech Cement Ltd',
         sector: 'Materials',
         instrument: 'Equity',
         percentage: 1.5,
+        marketCapitalization: 'Large Cap',
       },
       {
         name: 'The Federal Bank Ltd',
         sector: 'Financial',
         instrument: 'Equity',
         percentage: 1.4,
-      },
-      {
-        name: 'Reliance Industries Ltd',
-        sector: 'Energy',
-        instrument: 'Equity',
-        percentage: 1,
-      },
-      {
-        name: 'Eternal Ltd',
-        sector: 'Services',
-        instrument: 'Equity',
-        percentage: 1,
-      },
-      {
-        name: 'HCL Technologies Ltd',
-        sector: 'Technology',
-        instrument: 'Equity',
-        percentage: 1,
-      },
-      {
-        name: 'Hindustan Unilever Ltd',
-        sector: 'Consumer Staples',
-        instrument: 'Equity',
-        percentage: 1,
-      },
-      {
-        name: 'Sun Pharmaceutical Industries Ltd',
-        sector: 'Healthcare',
-        instrument: 'Equity',
-        percentage: 1,
-      },
-      {
-        name: 'Cipla Ltd',
-        sector: 'Healthcare',
-        instrument: 'Equity',
-        percentage: 1,
+        marketCapitalization: 'Mid Cap',
       },
       {
         name: 'Bharti Airtel Ltd',
         sector: 'Communication',
         instrument: 'Equity',
         percentage: 1,
+        marketCapitalization: 'Large Cap',
+      },
+      {
+        name: 'Cipla Ltd',
+        sector: 'Healthcare',
+        instrument: 'Equity',
+        percentage: 1,
+        marketCapitalization: 'Large Cap',
+      },
+      {
+        name: 'Eternal Ltd',
+        sector: 'Services',
+        instrument: 'Equity',
+        percentage: 1,
+        marketCapitalization: 'Large Cap',
+      },
+      {
+        name: 'HCL Technologies Ltd',
+        sector: 'Technology',
+        instrument: 'Equity',
+        percentage: 1,
+        marketCapitalization: 'Large Cap',
+      },
+      {
+        name: 'Hindustan Unilever Ltd',
+        sector: 'Consumer Staples',
+        instrument: 'Equity',
+        percentage: 1,
+        marketCapitalization: 'Large Cap',
       },
       {
         name: 'Larsen & Toubro Ltd',
         sector: 'Construction',
         instrument: 'Equity',
         percentage: 1,
+        marketCapitalization: 'Large Cap',
+      },
+      {
+        name: 'Reliance Industries Ltd',
+        sector: 'Energy',
+        instrument: 'Equity',
+        percentage: 1,
+        marketCapitalization: 'Large Cap',
       },
       {
         name: 'SBI Life Insurance Company Ltd',
         sector: 'Insurance',
         instrument: 'Equity',
         percentage: 1,
+        marketCapitalization: 'Large Cap',
       },
       {
-        name: 'InterGlobe Aviation Ltd',
-        sector: 'Services',
+        name: 'Sun Pharmaceutical Industries Ltd',
+        sector: 'Healthcare',
         instrument: 'Equity',
-        percentage: 0.8,
-      },
-      {
-        name: 'Coforge Ltd',
-        sector: 'Technology',
-        instrument: 'Equity',
-        percentage: 0.8,
+        percentage: 1,
+        marketCapitalization: 'Large Cap',
       },
       {
         name: 'Asian Paints Ltd',
         sector: 'Materials',
         instrument: 'Equity',
         percentage: 0.8,
+        marketCapitalization: 'Large Cap',
       },
       {
-        name: 'NTPC Ltd',
-        sector: 'Energy',
-        instrument: 'Equity',
-        percentage: 0.7,
-      },
-      {
-        name: 'Persistent Systems Ltd',
+        name: 'Coforge Ltd',
         sector: 'Technology',
         instrument: 'Equity',
-        percentage: 0.7,
+        percentage: 0.8,
+        marketCapitalization: 'Mid Cap',
       },
       {
-        name: "Dr. Reddy's Laboratories Ltd",
-        sector: 'Healthcare',
+        name: 'InterGlobe Aviation Ltd',
+        sector: 'Services',
         instrument: 'Equity',
-        percentage: 0.7,
+        percentage: 0.8,
+        marketCapitalization: 'Large Cap',
       },
       {
         name: 'AIA Engineering Ltd',
         sector: 'Metal & Mining',
         instrument: 'Equity',
         percentage: 0.7,
+        marketCapitalization: 'Mid Cap',
       },
       {
         name: 'Dixon Technologies (India) Ltd',
         sector: 'Capital Goods',
         instrument: 'Equity',
         percentage: 0.7,
+        marketCapitalization: 'Mid Cap',
       },
       {
-        name: 'Max Healthcare Institute Ltd',
+        name: "Dr. Reddy's Laboratories Ltd",
         sector: 'Healthcare',
         instrument: 'Equity',
-        percentage: 0.6,
+        percentage: 0.7,
+        marketCapitalization: 'Large Cap',
+      },
+      {
+        name: 'NTPC Ltd',
+        sector: 'Energy',
+        instrument: 'Equity',
+        percentage: 0.7,
+        marketCapitalization: 'Large Cap',
+      },
+      {
+        name: 'Persistent Systems Ltd',
+        sector: 'Technology',
+        instrument: 'Equity',
+        percentage: 0.7,
+        marketCapitalization: 'Mid Cap',
       },
       {
         name: 'Bharti Hexacom Ltd',
         sector: 'Communication',
         instrument: 'Equity',
         percentage: 0.6,
+        marketCapitalization: 'Mid Cap',
       },
       {
-        name: 'Multi Commodity Exchange of India Ltd',
-        sector: 'Services',
+        name: 'Max Healthcare Institute Ltd',
+        sector: 'Healthcare',
         instrument: 'Equity',
-        percentage: 0.5,
+        percentage: 0.6,
+        marketCapitalization: 'Mid Cap',
       },
       {
         name: 'Cummins India Ltd',
         sector: 'Capital Goods',
         instrument: 'Equity',
         percentage: 0.5,
+        marketCapitalization: 'Mid Cap',
+      },
+      {
+        name: 'Multi Commodity Exchange of India Ltd',
+        sector: 'Services',
+        instrument: 'Equity',
+        percentage: 0.5,
+        marketCapitalization: 'Mid Cap',
       },
     ];
 
@@ -809,6 +873,7 @@ export class PortfolioPage implements OnInit, AfterViewInit {
             sector: data.sector,
             instrument: data.instrument,
             percentageOfHoldings: data.percentage,
+            marketCapitalization: data.marketCapitalization,
             createdBy: 'admin',
           };
 

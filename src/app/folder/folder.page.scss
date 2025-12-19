@@ -416,6 +416,39 @@ ion-button {
   }
 }
 
+// Download agreement link
+.download-link {
+  margin-top: 4px;
+  
+  .agreement-item {
+    margin-bottom: 2px;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+  }
+  
+  .download-agreement-link {
+    color: var(--ion-color-primary);
+    text-decoration: none;
+    font-size: 0.75rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-block;
+    
+    &:hover {
+      color: var(--ion-color-primary-shade);
+      text-decoration: underline;
+      transform: translateY(-1px);
+    }
+    
+    &:active {
+      transform: translateY(0);
+    }
+  }
+}
+
 // Responsive design for modal
 @media (max-width: 768px) {
   .modal-content {

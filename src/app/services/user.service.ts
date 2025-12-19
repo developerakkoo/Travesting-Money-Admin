@@ -7,6 +7,22 @@ const PROJECT_ID = environment.firebaseConfig.projectId;
 const API_KEY = environment.firebaseConfig.apiKey;
 const BASE_URL = `https://firestore.googleapis.com/v1/projects/${PROJECT_ID}/databases/(default)/documents`;
 
+export interface AgreementUrl {
+  viewUrl: string;
+  fileName: string;
+  generatedDate: string;
+  downloadUrl: string;
+}
+
+export interface SubscriptionDetail {
+  purchaseDate: string;
+  expiryDate: string;
+  plan: string;
+  serviceId: string;
+  status: string;
+  amount: number;
+}
+
 export interface User {
   uid: string;
   name: string;
@@ -20,6 +36,10 @@ export interface User {
   isActive: boolean;
   lastLoginAt: string;
   updatedAt: string;
+  password?: string;
+  panNumber?: string;
+  agreementUrls?: AgreementUrl[];
+  subscriptionDetails?: SubscriptionDetail[];
 }
 
 export interface TradeAction {
@@ -49,6 +69,13 @@ export interface StockRecommendation {
   entryRangeMin: number; // Minimum entry price range
   entryRangeMax: number; // Maximum entry price range
   stoploss: number; // Stoploss price
+  targetHit: boolean;
+  stoplossHit: boolean;
+  exitPrice?: number;
+  exitDate?: string;
+  exitTime?: string;
+  profitEarned: string;
+  isMarkedForDeletion: boolean;
   potentialLeftPct: number; // Potential percentage left
   durationText: string; // Duration text (e.g., "1-3 months")
   actions: TradeAction[]; // Array of trade actions (averaging, partial booking)
@@ -66,6 +93,18 @@ export interface Holding {
   sector: string;
   instrument: string;
   percentageOfHoldings: number;
+  marketCapitalization?: string;
+  createdAt: string;
+  createdBy: string;
+}
+
+export interface MutualFund {
+  id?: string;
+  fundName: string;
+  category: string;
+  portfolioWeight: number; // percentage
+  expenseRatio: number; // percentage
+  role: string;
   createdAt: string;
   createdBy: string;
 }
@@ -126,7 +165,7 @@ export class UserService {
   convertFirestoreToUser(doc: any): User {
     const fields = doc.fields;
     return {
-      uid: doc.name.split('/').pop(),
+      uid: fields.uid?.stringValue || doc.name.split('/').pop(),
       name: fields.name?.stringValue || '',
       email: fields.email?.stringValue || '',
       phoneNumber: fields.phoneNumber?.stringValue || '',
@@ -141,6 +180,22 @@ export class UserService {
       isActive: fields.isActive?.booleanValue || true,
       lastLoginAt: fields.lastLoginAt?.timestampValue || '',
       updatedAt: fields.updatedAt?.timestampValue || '',
+      password: fields.password?.stringValue,
+      panNumber: fields.panNumber?.stringValue,
+      agreementUrls: fields.agreementUrls?.arrayValue?.values?.map((v: any) => ({
+        viewUrl: v.mapValue?.fields?.viewUrl?.stringValue || '',
+        fileName: v.mapValue?.fields?.fileName?.stringValue || '',
+        generatedDate: v.mapValue?.fields?.generatedDate?.timestampValue || '',
+        downloadUrl: v.mapValue?.fields?.downloadUrl?.stringValue || ''
+      })) || [],
+      subscriptionDetails: fields.subscriptionDetails?.arrayValue?.values?.map((v: any) => ({
+        purchaseDate: v.mapValue?.fields?.purchaseDate?.timestampValue || '',
+        expiryDate: v.mapValue?.fields?.expiryDate?.timestampValue || '',
+        plan: v.mapValue?.fields?.plan?.stringValue || '',
+        serviceId: v.mapValue?.fields?.serviceId?.stringValue || '',
+        status: v.mapValue?.fields?.status?.stringValue || '',
+        amount: parseInt(v.mapValue?.fields?.amount?.integerValue || '0')
+      })) || []
     };
   }
 
@@ -158,6 +213,10 @@ export class UserService {
           stockExchange: { stringValue: recommendation.stockExchange },
           term: { stringValue: recommendation.term },
           recommendation: { stringValue: recommendation.recommendation },
+          targetHit: { booleanValue: recommendation.targetHit },
+          stoplossHit: { booleanValue: recommendation.stoplossHit },
+          profitEarned: { stringValue: recommendation.profitEarned },
+          isMarkedForDeletion: { booleanValue: recommendation.isMarkedForDeletion },
           date: { stringValue: recommendation.date },
           targetPrice: { doubleValue: recommendation.targetPrice },
           currentPrice: { doubleValue: recommendation.currentPrice },
@@ -255,11 +314,18 @@ export class UserService {
       const response = (await this.http.get(url).toPromise()) as any;
       console.log('Get recommendations response:', response);
 
-      return (
+      // Convert Firestore documents to StockRecommendation objects
+      const allRecs: StockRecommendation[] =
         response.documents?.map((doc: any) =>
           this.convertFirestoreToStockRecommendation(doc)
-        ) || []
+        ) || [];
+
+      // Filter out recommendations that have been marked for deletion
+      const visibleRecs = allRecs.filter(
+        (rec: StockRecommendation) => !rec.isMarkedForDeletion
       );
+
+      return visibleRecs;
     } catch (error) {
       console.error('Error fetching stock recommendations:', error);
       console.error('Error details:', JSON.stringify(error, null, 2));
@@ -316,10 +382,10 @@ export class UserService {
     updates: Partial<StockRecommendation>
   ): Promise<StockRecommendation> {
     try {
-      const url = `${BASE_URL}/stockRecommendations/${id}?key=${API_KEY}`;
-
-      // Build the fields object manually to handle complex types
-      const fields: any = {};
+  // We'll build the fields object manually to handle complex types.
+  // To avoid accidentally removing any existing fields on the document,
+  // we'll include an updateMask listing only the field paths we intend to update.
+  const fields: any = {};
 
       // Handle simple string fields
       if (updates.userId !== undefined)
@@ -332,6 +398,13 @@ export class UserService {
         fields.stockExchange = { stringValue: updates.stockExchange };
       if (updates.term !== undefined)
         fields.term = { stringValue: updates.term };
+      if(updates.profitEarned !== undefined) {
+        // Ensure profitEarned is always a string, even if it's 0 or empty
+        const profitEarnedValue = updates.profitEarned === null || updates.profitEarned === undefined 
+          ? '' 
+          : String(updates.profitEarned);
+        fields.profitEarned = { stringValue: profitEarnedValue };
+      }
       if (updates.recommendation !== undefined)
         fields.recommendation = { stringValue: updates.recommendation };
       if (updates.date !== undefined)
@@ -364,6 +437,16 @@ export class UserService {
         fields.stoploss = { doubleValue: updates.stoploss };
       if (updates.potentialLeftPct !== undefined)
         fields.potentialLeftPct = { doubleValue: updates.potentialLeftPct };
+      if (updates.exitPrice !== undefined && updates.exitPrice !== null) {
+        fields.exitPrice = { doubleValue: updates.exitPrice };
+      }
+
+      if (updates.exitDate !== undefined) {
+        fields.exitDate = { stringValue: updates.exitDate };
+      }
+      if (updates.exitTime !== undefined) {
+        fields.exitTime = { stringValue: updates.exitTime };
+      }
 
       // Handle optional fields
       if (updates.imageUrl !== undefined) {
@@ -415,12 +498,22 @@ export class UserService {
 
       const updateData = { fields };
 
+      // Build updateMask query params from the fields keys so Firestore updates
+      // only these paths and preserves all other fields on the document.
+      const fieldPaths = Object.keys(fields || []);
+      let url = `${BASE_URL}/stockRecommendations/${id}?key=${API_KEY}`;
+      if (fieldPaths.length > 0) {
+        const maskParams = fieldPaths
+          .map((p) => `updateMask.fieldPaths=${encodeURIComponent(p)}`)
+          .join('&');
+        url = `${url}&${maskParams}`;
+      }
+
       console.log('Updating stock recommendation:', id);
       console.log('Update payload:', JSON.stringify(updateData, null, 2));
+      console.log('PATCH URL with updateMask:', url);
 
-      const response = (await this.http
-        .patch(url, updateData)
-        .toPromise()) as any;
+      const response = (await this.http.patch(url, updateData).toPromise()) as any;
       return this.convertFirestoreToStockRecommendation(response);
     } catch (error) {
       console.error('Error updating stock recommendation:', error);
@@ -434,6 +527,58 @@ export class UserService {
       await this.http.delete(url).toPromise();
     } catch (error) {
       console.error('Error deleting stock recommendation:', error);
+      throw error;
+    }
+  }
+
+  async markStockRecommendationForDeletion(
+    id: string,
+    exitDetails?: {
+      exitPrice?: number;
+      exitDate?: string;
+      exitTime?: string;
+      profitEarned?: string;
+    }
+  ): Promise<StockRecommendation> {
+    try {
+      const fields: any = {
+        isMarkedForDeletion: { booleanValue: true },
+      };
+      const fieldPaths: string[] = ['isMarkedForDeletion'];
+
+      if (exitDetails) {
+        if (exitDetails.exitPrice !== undefined && exitDetails.exitPrice !== null) {
+          fields.exitPrice = { doubleValue: exitDetails.exitPrice };
+          fieldPaths.push('exitPrice');
+        }
+        if (exitDetails.exitDate !== undefined) {
+          fields.exitDate = { stringValue: exitDetails.exitDate };
+          fieldPaths.push('exitDate');
+        }
+        if (exitDetails.exitTime !== undefined) {
+          fields.exitTime = { stringValue: exitDetails.exitTime };
+          fieldPaths.push('exitTime');
+        }
+        if (exitDetails.profitEarned !== undefined) {
+          fields.profitEarned = { stringValue: exitDetails.profitEarned };
+          fieldPaths.push('profitEarned');
+        }
+      }
+
+      const updateData = { fields };
+
+      let url = `${BASE_URL}/stockRecommendations/${id}?key=${API_KEY}`;
+      if (fieldPaths.length > 0) {
+        const maskParams = fieldPaths
+          .map((p) => `updateMask.fieldPaths=${encodeURIComponent(p)}`)
+          .join('&');
+        url = `${url}&${maskParams}`;
+      }
+
+      const response = (await this.http.patch(url, updateData).toPromise()) as any;
+      return this.convertFirestoreToStockRecommendation(response);
+    } catch (error) {
+      console.error('Error marking stock recommendation for deletion:', error);
       throw error;
     }
   }
@@ -524,6 +669,27 @@ export class UserService {
       durationText: fields.durationText?.stringValue || '',
       actions: actions,
       alerts: alerts,
+      targetHit: fields.targetHit?.booleanValue || false,
+      stoplossHit: fields.stoplossHit?.booleanValue || false,
+      exitPrice:
+        fields.exitPrice?.doubleValue ||
+        fields.exitPrice?.integerValue,
+      exitDate: fields.exitDate?.stringValue || undefined,
+      exitTime: fields.exitTime?.stringValue || undefined,
+      // Handle profitEarned as both string (correct) and number (legacy data)
+      profitEarned: (() => {
+        if (fields.profitEarned?.stringValue !== undefined) {
+          return fields.profitEarned.stringValue;
+        }
+        if (fields.profitEarned?.doubleValue !== undefined && fields.profitEarned?.doubleValue !== null) {
+          return String(fields.profitEarned.doubleValue);
+        }
+        if (fields.profitEarned?.integerValue !== undefined && fields.profitEarned?.integerValue !== null) {
+          return String(fields.profitEarned.integerValue);
+        }
+        return '';
+      })(),
+      isMarkedForDeletion: fields.isMarkedForDeletion?.booleanValue || false,
       reason: fields.reason?.stringValue || '',
       imageUrl: fields.imageUrl?.stringValue,
       researchReportUrl: fields.researchReportUrl?.stringValue,
@@ -538,7 +704,7 @@ export class UserService {
   ): Promise<Holding> {
     try {
       const url = `${BASE_URL}/holdings?key=${API_KEY}`;
-      const payload = {
+      const payload: any = {
         fields: {
           name: { stringValue: holding.name },
           sector: { stringValue: holding.sector },
@@ -548,6 +714,10 @@ export class UserService {
           createdAt: { timestampValue: new Date().toISOString() },
         },
       };
+
+      if (holding.marketCapitalization) {
+        payload.fields.marketCapitalization = { stringValue: holding.marketCapitalization };
+      }
 
       console.log('Sending holding request to:', url);
       console.log('Payload:', JSON.stringify(payload, null, 2));
@@ -607,6 +777,9 @@ export class UserService {
           doubleValue: holding.percentageOfHoldings,
         };
       }
+      if (holding.marketCapitalization !== undefined) {
+        payload.fields.marketCapitalization = { stringValue: holding.marketCapitalization };
+      }
 
       const response = (await this.http.patch(url, payload).toPromise()) as any;
       return this.convertFirestoreToHolding(response);
@@ -637,6 +810,130 @@ export class UserService {
         fields.percentageOfHoldings?.doubleValue ||
         fields.percentageOfHoldings?.integerValue ||
         0,
+      marketCapitalization: fields.marketCapitalization?.stringValue || undefined,
+      createdBy: fields.createdBy?.stringValue || '',
+      createdAt: fields.createdAt?.stringValue || new Date().toISOString(),
+    };
+  }
+
+  // Mutual Fund CRUD operations
+  async addMutualFund(
+    mutualFund: Omit<MutualFund, 'id' | 'createdAt'>
+  ): Promise<MutualFund> {
+    try {
+      const url = `${BASE_URL}/mutualFunds?key=${API_KEY}`;
+      const payload: any = {
+        fields: {
+          fundName: { stringValue: mutualFund.fundName },
+          category: { stringValue: mutualFund.category },
+          portfolioWeight: { doubleValue: mutualFund.portfolioWeight },
+          expenseRatio: { doubleValue: mutualFund.expenseRatio },
+          role: { stringValue: mutualFund.role },
+          createdBy: { stringValue: mutualFund.createdBy },
+          createdAt: { timestampValue: new Date().toISOString() },
+        },
+      };
+
+      console.log('Sending mutual fund request to:', url);
+      console.log('Payload:', JSON.stringify(payload, null, 2));
+
+      const response = (await this.http.post(url, payload).toPromise()) as any;
+
+      console.log('Mutual fund response received:', response);
+
+      return {
+        id: response.name?.split('/').pop() || '',
+        ...mutualFund,
+        createdAt: new Date().toISOString(),
+      };
+    } catch (error) {
+      console.error('Error adding mutual fund:', error);
+      console.error('Error details:', JSON.stringify(error, null, 2));
+      throw error;
+    }
+  }
+
+  async getMutualFunds(): Promise<MutualFund[]> {
+    try {
+      const url = `${BASE_URL}/mutualFunds?key=${API_KEY}`;
+      const response = (await this.http.get(url).toPromise()) as any;
+
+      if (!response.documents) {
+        return [];
+      }
+
+      return response.documents.map((doc: any) =>
+        this.convertFirestoreToMutualFund(doc)
+      );
+    } catch (error) {
+      console.error('Error getting mutual funds:', error);
+      throw error;
+    }
+  }
+
+  async updateMutualFund(
+    id: string,
+    mutualFund: Partial<MutualFund>
+  ): Promise<MutualFund> {
+    try {
+      const url = `${BASE_URL}/mutualFunds/${id}?key=${API_KEY}`;
+      const payload: any = {
+        fields: {},
+      };
+
+      if (mutualFund.fundName !== undefined) {
+        payload.fields.fundName = { stringValue: mutualFund.fundName };
+      }
+      if (mutualFund.category !== undefined) {
+        payload.fields.category = { stringValue: mutualFund.category };
+      }
+      if (mutualFund.portfolioWeight !== undefined) {
+        payload.fields.portfolioWeight = {
+          doubleValue: mutualFund.portfolioWeight,
+        };
+      }
+      if (mutualFund.expenseRatio !== undefined) {
+        payload.fields.expenseRatio = {
+          doubleValue: mutualFund.expenseRatio,
+        };
+      }
+      if (mutualFund.role !== undefined) {
+        payload.fields.role = { stringValue: mutualFund.role };
+      }
+
+      const response = (await this.http.patch(url, payload).toPromise()) as any;
+      return this.convertFirestoreToMutualFund(response);
+    } catch (error) {
+      console.error('Error updating mutual fund:', error);
+      throw error;
+    }
+  }
+
+  async deleteMutualFund(id: string): Promise<void> {
+    try {
+      const url = `${BASE_URL}/mutualFunds/${id}?key=${API_KEY}`;
+      await this.http.delete(url).toPromise();
+    } catch (error) {
+      console.error('Error deleting mutual fund:', error);
+      throw error;
+    }
+  }
+
+  private convertFirestoreToMutualFund(doc: any): MutualFund {
+    const fields = doc.fields;
+    return {
+      id: doc.name.split('/').pop(),
+      fundName: fields.fundName?.stringValue || '',
+      category: fields.category?.stringValue || '',
+      portfolioWeight:
+        fields.portfolioWeight?.doubleValue ||
+        fields.portfolioWeight?.integerValue ||
+        0,
+      expenseRatio:
+        fields.expenseRatio?.doubleValue ||
+        fields.expenseRatio?.integerValue ||
+        0,
+      role: fields.role?.stringValue || '',
       createdBy: fields.createdBy?.stringValue || '',
       createdAt: fields.createdAt?.stringValue || new Date().toISOString(),
     };

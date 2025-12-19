@@ -30,7 +30,11 @@ export class StockIdeaService {
       entryRangeMax: 2575,
       stoploss: 2550,
       targetPrice: 2590,
-      durationText: '1-3 months',
+      durationText: '',
+      targetHit: false,
+      stoplossHit: false,
+      profitEarned: 0,
+      isMarkedForDeletion: false,
       actions: [
         {
           id: '1',
@@ -81,6 +85,10 @@ export class StockIdeaService {
       actions: payload.actions || [],
       alerts: payload.alerts || [],
       cmp: payload.cmp,
+      targetHit: false,
+      stoplossHit: false,
+      profitEarned: 0,
+      isMarkedForDeletion: false,
       changePct: payload.changePct,
       potentialLeftPct: payload.potentialLeftPct,
       createdAt: new Date().toISOString(),
@@ -105,6 +113,10 @@ export class StockIdeaService {
         ...ideas[ideaIndex],
         ...payload,
         id,
+        targetHit: false,
+        stoplossHit: false,
+        profitEarned: 0,
+        isMarkedForDeletion: false,
         updatedAt: new Date().toISOString(),
       };
 
@@ -139,6 +151,10 @@ export class StockIdeaService {
       const publishedIdea: StockIdea = {
         ...idea,
         postedAt: new Date().toISOString(),
+        targetHit: false,
+        stoplossHit: false,
+        profitEarned: 0,
+        isMarkedForDeletion: false,
         updatedAt: new Date().toISOString(),
         baseline: {
           stoploss: idea.stoploss,
