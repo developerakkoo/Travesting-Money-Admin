@@ -210,11 +210,27 @@
                 <div class="user-info">
                   <strong>{{user.name}}</strong>
                   <small>{{user.uid}}</small>
-                  <div class="download-link" *ngIf="user.agreementUrls && user.agreementUrls.length > 0">
+                  <div class="agreement-links" *ngIf="user.agreementUrls && user.agreementUrls.length > 0">
                     <div *ngFor="let agreement of user.agreementUrls; let i = index" class="agreement-item">
-                      <a (click)="downloadAgreementPDF(agreement, user.name)" class="download-agreement-link">
-                        📄 Agreement {{i + 1}} ({{formatDate(agreement.generatedDate)}})
-                      </a>
+                      <div class="agreement-label">📄 Agreement {{i + 1}} ({{formatDate(agreement.generatedDate)}})</div>
+                      <div class="agreement-buttons">
+                        <ion-button 
+                          size="small" 
+                          fill="outline" 
+                          color="primary"
+                          (click)="viewAgreementPDF(agreement, user.name)">
+                          <ion-icon name="eye-outline" slot="start"></ion-icon>
+                          View
+                        </ion-button>
+                        <ion-button 
+                          size="small" 
+                          fill="solid" 
+                          color="primary"
+                          (click)="downloadAgreementPDF(agreement, user.name)">
+                          <ion-icon name="download-outline" slot="start"></ion-icon>
+                          Download
+                        </ion-button>
+                      </div>
                     </div>
                   </div>
                 </div>

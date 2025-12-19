@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  apiUrl: 'http://localhost:4000', // TODO: Update with production API URL
+  apiUrl: 'https://api.travestingmoney.com', // TODO: Update with production API URL
   firebaseConfig: {
     apiKey: 'AIzaSyCV8_CE8XH_OXyIhtUrejvvH4BRFmfpf9Y',
     authDomain: 'travestingmoney-5d9f9.firebaseapp.com',

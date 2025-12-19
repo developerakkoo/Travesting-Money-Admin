@@ -196,6 +196,29 @@ export class FolderPage implements OnInit {
     }
   }
 
+  async viewAgreementPDF(agreement: any, userName: string) {
+    if (!agreement.viewUrl) {
+      this.presentToast('No PDF available for this agreement', 'warning');
+      return;
+    }
+
+    try {
+      // Construct full URL if needed
+      let viewUrl = agreement.viewUrl;
+      if (!viewUrl.startsWith('http')) {
+        // If URL is relative, prepend API URL
+        viewUrl = `https://api.travestingmoney.com${viewUrl}`;
+      }
+      
+      // Open in new tab
+      window.open(viewUrl, '_blank');
+      this.presentToast(`Opening agreement for ${userName}`, 'success');
+    } catch (error) {
+      console.error('Error viewing agreement PDF:', error);
+      this.presentToast('Failed to open agreement PDF', 'danger');
+    }
+  }
+
   async downloadAgreementPDF(agreement: any, userName: string) {
     if (!agreement.downloadUrl) {
       this.presentToast('No PDF available for this agreement', 'warning');
@@ -208,9 +231,16 @@ export class FolderPage implements OnInit {
     await loading.present();
 
     try {
+      // Construct full URL if needed
+      let downloadUrl = agreement.downloadUrl;
+      if (!downloadUrl.startsWith('http')) {
+        // If URL is relative, prepend API URL
+        downloadUrl = `https://api.travestingmoney.com${downloadUrl}`;
+      }
+      
       // Create a temporary anchor element to trigger download
       const link = document.createElement('a');
-      link.href = agreement.downloadUrl;
+      link.href = downloadUrl;
       link.download = `${userName}_${agreement.fileName}`;
       link.target = '_blank';
       

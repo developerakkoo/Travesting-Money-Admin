@@ -4,7 +4,7 @@
 
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:4000',
+  apiUrl: 'https://api.travestingmoney.com',
   firebaseConfig: {
     apiKey: "AIzaSyCV8_CE8XH_OXyIhtUrejvvH4BRFmfpf9Y",
     authDomain: "travestingmoney-5d9f9.firebaseapp.com",
